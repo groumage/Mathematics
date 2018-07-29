@@ -24,11 +24,13 @@ let rec simplify f x =
 Mul (Float (simplify_var f x), Var x)
 *)
 
+
 let rec simplify f =
 	let rec is_zero f =
 		match f with
 			| Float f when f = 0. -> true
 			| Float f -> false
+			| Var x -> false
 			| Add (f, g) -> is_zero f && is_zero g
 			| Sub (f, g) -> is_zero f && is_zero g
 			| Mul (f, g) -> is_zero f || is_zero g
@@ -70,7 +72,90 @@ let rec simplify f =
 			| Cos f -> Cos (simplify_zero f)
 			| Sin f -> Sin (simplify_zero f)
 	in
-	let rec count_minus_plus f =
+	let rec is_plus_minus_one f j =
+		match f with
+			| Float f when f = j -> true
+			| Float f -> false
+			| Var x -> false
+			| Add (f, g) -> are_plus_minus_one f g j
+			| Sub (f, g) -> are_plus_minus_one f g j
+			| _ -> false
+	and
+	are_plus_minus_one f g j =
+		match (f, g) with
+			| (Float f1, Float f2) when f1 +. f2 = j -> true
+			| (Float f1, Float f2) -> false
+			| (Var x, _) -> false
+			| (_, Var x) -> false
+			| (Add (f, g), Add (h, i)) -> are_plus_minus_one (Add (f, g)) (Add (h, i)) j
+			| (Sub (f, g), Sub (h, i)) -> are_plus_minus_one (Sub (f, g)) (Sub (h, i)) j
+			| (Add (f, g), Sub (h, i)) -> are_plus_minus_one (Add (f, g)) (Sub (h, i)) j
+			| (Sub (f, g), Add (h, i)) -> are_plus_minus_one (Sub (f, g)) (Add (h, i)) j
+			| _ -> false
+	in
+	let rec simplify_one f =
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (f, g) -> begin
+								if is_plus_minus_one f 1. && is_plus_minus_one g 1.
+								then Float 2.
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
+								then Float (-2.)
+								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
+								then Float 0.
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
+								then Float 0.
+								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
+								then Add (Float 1., simplify_one g)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
+								then Add (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
+								then Add (Float 1., simplify_one g)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
+								then Add (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
+								then Add (simplify_one f, Float 1.)
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
+								then Add (simplify_one f, Float (-1.))
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
+								then Add (simplify_one f, Float 1.)
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
+								then Add (simplify_one f, Float (-1.))
+								else Add (simplify_one f, simplify_one g)
+							end
+			| Sub (f, g) -> begin
+								if is_plus_minus_one f && is_plus_minus_one g
+								then Float 0.
+								else if is_plus_minus_one f && is_plus_minus_one g == false
+								then Sub (Float 1., simplify_one g)
+								else if is_plus_minus_one f == false && is_plus_minus_one g
+								then Sub (simplify_one f, Float 1.)
+								else Sub (simplify_one f, simplify_one g)
+							end
+			| Mul (f, g) -> begin
+								if is_plus_minus_one f && is_plus_minus_one g
+								then Float 1.
+								else if is_plus_minus_one f && is_plus_minus_one g == false
+								then simplify_one g
+								else if is_plus_minus_one f == false && is_plus_minus_one g
+								then simplify_one f
+								else Mul (simplify_one f, simplify_one g)
+							end
+			| Div (f, g) -> begin
+								if is_plus_minus_one f && is_plus_minus_one g
+								then Float 1.
+								else if is_plus_minus_one f && is_plus_minus_one g == false
+								then Div (Float 1., simplify_one g)
+								else if is_plus_minus_one f == false && is_plus_minus_one g
+								then simplify_one f
+								else Div (simplify_one f, simplify_one g)
+							end
+			| Cos f -> Cos (simplify_one f)
+			| Sin f -> Sin (simplify_one f)
+	in
+simplify_zero (simplify_one f)
+	(*let rec count_minus_plus f =
 		match f with
 			| Float f when f < 0. -> 1
 			| Float f when f >= 0. -> 0
@@ -83,6 +168,7 @@ let rec simplify f =
 	in
 	let rec delete_minus_plus f =
 		match f with
+			| Float f when (f = (-1.) || f = 1.) -> Float 1.
 			| Float f -> Float f
 			| Var x -> Var x
 			| Add (f, g) -> Add (delete_minus_plus f, delete_minus_plus g)
@@ -99,13 +185,11 @@ let rec simplify f =
 			| Add (f, g) -> Add (simplify_minus_plus f, simplify_minus_plus g)
 			| Sub (f, g) -> Sub (simplify_minus_plus f, simplify_minus_plus g)
 			| Mul (f, g) -> if count_minus_plus (Mul (f, g)) mod 2 == 0
-							then Mul (Float 1., Mul (delete_minus_plus f, delete_minus_plus g))
-							else Mul (Float (-1.), Mul (delete_minus_plus f, delete_minus_plus g))
+							then Mul (Float (1.), Mul (delete_minus_plus f, delete_minus_plus g))
+							else Mul (Float (1.), Mul (delete_minus_plus f, delete_minus_plus g))
 			| Cos f -> Cos (simplify_minus_plus f)
 			| Sin f -> Sin (simplify_minus_plus f)
-
-	in
-simplify_zero f
+	in*)
 
 let rec deriv f x =
 	match f with
