@@ -69,7 +69,9 @@ let main =
       				in
       				let fct_formel = ref result
       				in
+      				(*
       				fct_formel := Function.simplify !fct_formel "x";
+      				*)
       				if (Function.free_variables_present !fct_formel "x")
 					then
 						begin 
@@ -91,6 +93,7 @@ let main =
 			      			Graph.create_center_line 902 702;
 							Graph.trace (Graph.en_tableau_pixel fen !zip_tab) Graphics.blue;
 							Graph.create_line_graph 902 702;
+							Graph.print_fct !fct_formel;
 							let e = ref (Graphics.wait_next_event [Graphics.Key_pressed])
 							in
 							let loop = ref true
@@ -106,8 +109,10 @@ let main =
 													fct_formel := Function.deriv !fct_formel "x";
 													map_tab_y := Graph.map !fct_formel tab_y;
 													zip_tab := Graph.zip tab_x !map_tab_y;
+													Graph.create_center_line 902 702;
 													Graph.trace (Graph.en_tableau_pixel fen !zip_tab) Graphics.red;
 													Graph.create_line_graph 902 702;
+													Graph.print_fct !fct_formel;
 													e := Graphics.wait_next_event [Graphics.Key_pressed]
 												end
 									| 'i' ->	begin

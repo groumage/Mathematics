@@ -12,6 +12,7 @@ type formel =
 	| Sqrt of formel
 	| Exp of formel
 
+(*
 let rec simplify f x =
 	let rec simplify_var f x =
 		match f with
@@ -21,6 +22,7 @@ let rec simplify f x =
 			| Add (f, g) ->	simplify_var f x +. simplify_var g x
 	in
 Mul (Float (simplify_var f x), Var x)
+*)
 
 let rec deriv f x =
 	match f with
