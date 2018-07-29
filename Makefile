@@ -1,23 +1,36 @@
 SOURCES = util.ml matrix.ml function.ml graph.ml parser.mly lexer.mll main.ml
 
-EXEC = project.out
+EXEC = project.exe
 
 CAMLC = ocamlc
+CAMLOPT = ocamlopt
 CAMLDEP = ocamldep
 CAMLLEX = ocamllex
 CAMLYACC = ocamlyacc
 
+LIBS = $(WITHGRAPHICS) $(WITHSTR) $(WITHUNIX)
+
+WITHGRAPHICS = graphics.cma
+WITHSTR = str.cma
+WITHUNIX = unix.cma
+
 CUSTOM = -custom
 
-#all: depend $(EXEC)
+all: depend $(EXEC)
+
+opt : $(EXEC).opt
 
 SOURCES1 = $(SOURCES:.mly=.ml)
 SOURCES2 = $(SOURCES1:.mll=.ml)
 OBJS = $(SOURCES2:.ml=.cmo)
+OPTOBJS = $(SOURCES2:.ml=.cmx)
 
 $(EXEC): $(OBJS)
 	@$(CAMLC) $(CUSTOM) graphics.cma str.cma -o $(EXEC) $(OBJS)
 	@echo "\033[0;32m[Project Complete]\033[0m" $(EXEC)
+	
+$(EXEC).opt: $(OPTOBJS)
+	$(CAMLOPT) -o $(EXEC) $(LIBS:.cma=.cmxa) $(OPTOBJS)
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly
 
@@ -75,6 +88,8 @@ clean:
 	@rm -f $(EXEC)
 	@echo "\033[0;31m[Deleting]\033[0m" lexer.ml
 	@rm -f lexer.ml
+	@echo "\033[0;31m[Deleting]\033[0m" *.o
+	@rm -f *.o
 	@echo "\033[0;31m[Deleting]\033[0m" parser.ml
 	@rm -f parser.ml
 	@echo "\033[0;31m[Deleting]\033[0m" parser.mli

@@ -24,6 +24,89 @@ let rec simplify f x =
 Mul (Float (simplify_var f x), Var x)
 *)
 
+let rec simplify f =
+	let rec is_zero f =
+		match f with
+			| Float f when f = 0. -> true
+			| Float f -> false
+			| Add (f, g) -> is_zero f && is_zero g
+			| Sub (f, g) -> is_zero f && is_zero g
+			| Mul (f, g) -> is_zero f || is_zero g
+			| Div (f, g) -> is_zero f
+			| _ -> false
+	in
+	let rec simplify_zero f =
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (f, g) -> begin
+								if is_zero f && is_zero g
+								then Float 0.
+								else if is_zero f && is_zero g == false
+								then simplify_zero g
+								else if is_zero f == false && is_zero g
+								then simplify_zero f
+								else Add (simplify_zero f, simplify_zero g)
+							end
+			| Sub (f, g) -> begin
+								if is_zero f && is_zero g
+								then Float 0.
+								else if is_zero f && is_zero g == false
+								then simplify_zero g
+								else if is_zero f == false && is_zero g
+								then simplify_zero f
+								else Sub (simplify_zero f, simplify_zero g)
+							end
+			| Mul (f, g) -> begin
+								if is_zero f || is_zero g
+								then Float 0.
+								else Mul (simplify_zero f, simplify_zero g)
+							end
+			| Div (f, g) -> begin
+								if is_zero f
+								then Float 0.
+								else Div (simplify_zero f, simplify_zero g)
+							end
+			| Cos f -> Cos (simplify_zero f)
+			| Sin f -> Sin (simplify_zero f)
+	in
+	let rec count_minus_plus f =
+		match f with
+			| Float f when f < 0. -> 1
+			| Float f when f >= 0. -> 0
+			| Var x -> 0
+			| Add (f, g) -> 0
+			| Sub (f, g) -> 0
+			| Mul (f, g) -> count_minus_plus f + count_minus_plus g
+			| Cos f -> 0
+			| Sin f -> 0
+	in
+	let rec delete_minus_plus f =
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (f, g) -> Add (delete_minus_plus f, delete_minus_plus g)
+			| Sub (f, g) -> Sub (delete_minus_plus f, delete_minus_plus g)
+			| Mul (f, g) -> Mul (delete_minus_plus f, delete_minus_plus g)
+			| Div (f, g) -> Div (delete_minus_plus f, delete_minus_plus g)
+			| Cos f -> Cos (delete_minus_plus f)
+			| Sin f -> Sin (delete_minus_plus f)
+	in
+	let rec simplify_minus_plus f =
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (f, g) -> Add (simplify_minus_plus f, simplify_minus_plus g)
+			| Sub (f, g) -> Sub (simplify_minus_plus f, simplify_minus_plus g)
+			| Mul (f, g) -> if count_minus_plus (Mul (f, g)) mod 2 == 0
+							then Mul (Float 1., Mul (delete_minus_plus f, delete_minus_plus g))
+							else Mul (Float (-1.), Mul (delete_minus_plus f, delete_minus_plus g))
+			| Cos f -> Cos (simplify_minus_plus f)
+			| Sin f -> Sin (simplify_minus_plus f)
+
+	in
+simplify_zero f
+
 let rec deriv f x =
 	match f with
   		| Float f -> Float 0.

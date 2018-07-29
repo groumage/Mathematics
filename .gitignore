@@ -12,6 +12,7 @@ lexer.ml
 parser.ml
 parser.mli
 project.out
+project.exe
 
 # ocamlbuild working directory
 _build/
