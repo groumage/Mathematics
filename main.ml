@@ -11,8 +11,7 @@ let main =
   					print_string "MATRIX CALCULATOR\n\n";
   					let nb_lines = string_of_int (Matrix.nb_lines matrix)
   					in
-  					let nb_columns = string_of_int (Matrix.nb_columns matrix)
-  					in
+  					let nb_columns = string_of_int (Matrix.nb_columns matrix) in
   					print_string ("Dimensions:\n" ^ nb_lines ^ "x" ^ nb_columns);
 					print_string "\n\n";
 					print_string "Matrix:\n";
@@ -68,35 +67,62 @@ let main =
 					in
 					let result = Parser.main Lexer.token lexbuf
       				in
-      				let fct_formel = result
+      				let fct_formel = ref result
       				in
-      				if (Function.free_variables_present fct_formel "x")
+      				fct_formel := Function.simplify !fct_formel "x";
+      				if (Function.free_variables_present !fct_formel "x")
 					then
 						begin 
-							print_string "Free variables are presents.\n";
+							print_string "Free variables are presents. The function can't be draw.\n";
 							choice
 						end
 					else
 						begin
-							let fen = Graph.create_fenetre 901 701 (-10.) 10. (-10.) 10.
+							let fen = Graph.create_fenetre 902 702 (-10.) 10. (-10.) 10.
 							in
 							let tab_x = Graph.decoupe_intervalle fen.abs !Graph.nombre_points
 							in
 		      				let tab_y = Graph.decoupe_intervalle fen.ord !Graph.nombre_points
 		      				in
-			      			let map_tab_y = Graph.map fct_formel tab_y
+			      			let map_tab_y = ref (Graph.map !fct_formel tab_y)
 			      			in
-			      			let zip_tab = Graph.zip tab_x map_tab_y
+			      			let zip_tab = ref (Graph.zip tab_x !map_tab_y)
 			      			in
-							Graph.trace (Graph.en_tableau_pixel fen zip_tab) Graphics.blue;
+			      			Graph.create_center_line 902 702;
+							Graph.trace (Graph.en_tableau_pixel fen !zip_tab) Graphics.blue;
+							Graph.create_line_graph 902 702;
+							let e = ref (Graphics.wait_next_event [Graphics.Key_pressed])
+							in
+							let loop = ref true
+							in
+							while !loop do
+								match !e.Graphics.key with
+									| 'q' ->	begin
+													loop := false;
+													Graphics.clear_graph ()
+												end	
+									| 'd' ->	begin
+													Graphics.clear_graph();
+													fct_formel := Function.deriv !fct_formel "x";
+													map_tab_y := Graph.map !fct_formel tab_y;
+													zip_tab := Graph.zip tab_x !map_tab_y;
+													Graph.trace (Graph.en_tableau_pixel fen !zip_tab) Graphics.red;
+													Graph.create_line_graph 902 702;
+													e := Graphics.wait_next_event [Graphics.Key_pressed]
+												end
+									| 'i' ->	begin
+													Graphics.clear_graph();
+													fct_formel := Function.integrate !fct_formel "x";
+													map_tab_y := Graph.map !fct_formel tab_y;
+													zip_tab := Graph.zip tab_x !map_tab_y;
+													Graph.trace (Graph.en_tableau_pixel fen !zip_tab) Graphics.green;
+													Graph.create_line_graph 902 702;
+													e := Graphics.wait_next_event [Graphics.Key_pressed]
+												end
+									| _ ->	e := Graphics.wait_next_event [Graphics.Key_pressed]
+							done;
 							choice
 						end
-						(*let e = Graphics.wait_next_event [Graphics.Button_down] in
-							Graphics.clear_graph();
-							let fct_formel = Function.deriv (Add (Cos (Sin (Cos (Sin (Var("x"))))), Float 5.)) "x" in
-							let map_tab_y = Function.map (fct_formel) tab_y in
-							let zip_tab = Function.zip tab_x map_tab_y in
-							Function.trace (Function.en_tableau_pixel fen zip_tab) Graphics.blue;*)
 			| 5 -> 	print_string "\nSee you next time !\n";
 					choice
   			| _ -> 	failwith "loop: wrong choice" 
@@ -110,5 +136,6 @@ let main =
 		print_string "2. Matrix multiplicator\n";
 		print_string "3. Graphic\n";
 		print_string "4. Function calcualtor\n";
-		print_string "5. Exit\n"; res := loop (read_int ())
+		print_string "5. Exit\n";
+		res := loop (read_int ())
 	done

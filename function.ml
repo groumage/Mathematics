@@ -12,12 +12,22 @@ type formel =
 	| Sqrt of formel
 	| Exp of formel
 
+let rec simplify f x =
+	let rec simplify_var f x =
+		match f with
+			| Float f -> 0.
+			| Var v when v = x -> 1.
+			| Var v -> 0.
+			| Add (f, g) ->	simplify_var f x +. simplify_var g x
+	in
+Mul (Float (simplify_var f x), Var x)
+
 let rec deriv f x =
 	match f with
-  		| Float _ -> Float 0.
+  		| Float f -> Float 0.
   		| Var v when v = x -> Float 1.
-  		| Var _ -> Float 0.
-		| Add (f, g) -> Add (deriv f x, deriv g x)
+  		| Var v -> Float 0.
+		| Add (f, g) ->	Add (deriv f x, deriv g x)
 		| Sub (f, g) -> Sub (deriv f x, deriv g x)
 		| Mul (f, g) -> Add (Mul (f, deriv g x), Mul (g, deriv f x))
 		| Div (f, g) -> Div (Sub (Mul (deriv f x, g), Mul (f, deriv g x)), Mul (g, g))
@@ -27,6 +37,17 @@ let rec deriv f x =
 		| Puis (n, f) -> Mul (deriv f x, Mul (Float n, Puis (n -. 1., f)))
 		| Sqrt f -> Div (deriv f x, Mul (Float 2., Sqrt f))
 		| Exp f -> Mul (deriv f x, Exp f)
+
+let rec integrate f x =
+	match f with
+		| Float f -> Mul (Var x, Float f)
+		| Var v when v = x -> Mul (Var x, Var x)
+		| Var v -> Var v
+		| Add (f, g) -> Add (integrate f x, integrate g x)
+		| Sub (f, g) -> Sub (integrate f x, integrate g x)
+		(*
+		| Mul (f, g) -> integrate (Add (integrate (Mul (deriv f x, g)) x, integrate (Mul (f, deriv g x)) x)) x
+		*)
 
 let rec calcul_fct f x =
 	match f with

@@ -82,7 +82,9 @@ let trace t c =
 		let (x, y) = t.(i) in
 		if is_in_fen x y
 		then Graphics.lineto x y
-		else Graphics.lineto x 99
+		else if y <= decalage_y
+				then Graphics.lineto x 99
+				else Graphics.lineto x (Graphics.size_y() - 1)
 	done
 
 let longueur i =
