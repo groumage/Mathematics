@@ -3,21 +3,29 @@ type point = {x: float; y: float}
 type ligne_polygonale = point array
 type fenetre = {mutable abs: intervalle; mutable ord: intervalle}
 
-let nombre_points = ref 200
+let nombre_points = ref 500
 let decalage_x = 100
 let decalage_y = 100
+
+let create_line_graph dim_x dim_y =
+	Graphics.set_color Graphics.black;
+	Graphics.draw_rect 0 (decalage_y - 1) (dim_x - decalage_x) (dim_y - decalage_y);
+	Graphics.set_color (Graphics.rgb 128 128 128);
+	Graphics.draw_rect 20 5 200 50
+
+let create_center_line dim_x dim_y =
+	Graphics.set_color (Graphics.rgb 128 128 128);
+	Graphics.moveto 1 ((dim_y / 2) + (decalage_y / 2));
+	Graphics.lineto ((dim_x - decalage_x) - 1) ((dim_y / 2) + (decalage_y / 2));
+	Graphics.moveto ((dim_x / 2) - (decalage_x / 2)) (decalage_y - 1);
+	Graphics.lineto ((dim_x / 2) - (decalage_x / 2)) (dim_y - 2)
 
 let create_fenetre dim_x dim_y x1 x2 y1 y2 =
 	let param = " " ^ string_of_int dim_x ^ "x" ^ string_of_int dim_y in
 	Graphics.open_graph param;
 	Graphics.set_window_title "(Gui)^2 Graphics";
-	Graphics.draw_rect 0 (decalage_y - 1) (dim_x - decalage_x) (dim_y - decalage_y);
-	Graphics.set_color (Graphics.rgb 128 128 128);
-	Graphics.moveto 1 ((dim_y / 2) + (decalage_y / 2));
-	Graphics.lineto ((dim_x - decalage_x) - 1) ((dim_y / 2) + (decalage_y / 2));
-	Graphics.moveto ((dim_x / 2) - (decalage_x / 2)) (decalage_y - 1);
-	Graphics.lineto ((dim_x / 2) - (decalage_x / 2)) (dim_y - 2);
-	Graphics.draw_rect 20 5 200 50;
+	create_line_graph dim_x dim_y;
+	create_center_line dim_x dim_y;
 	let i1 = {a = x1; b = x2} in
 	let i2 = {a = y1; b = y2} in
 	{abs = i1; ord = i2}
@@ -36,10 +44,11 @@ let map f t =
 	let (x_text, y_text) = Graphics.text_size string_f in
 	Graphics.moveto 5 (decalage_x - y_text - 5);
 	Graphics.draw_string ("f(x) = " ^ string_f);
+	let tab = Array.make (Array.length t) 0. in
 	for i = 0 to ((Array.length t) - 1) do
-		t.(i) <- Function.calcul_fct f t.(i)
+		tab.(i) <- Function.calcul_fct f t.(i)
 	done;
-t
+tab
 
 let zip t1 t2 =
 	if Array.length t1 != Array.length t2
@@ -52,20 +61,40 @@ let zip t1 t2 =
 		done;
 t
 
+let is_in_fen x y =
+	if x >= 1 && x <= Graphics.size_x() - decalage_x - 2 && y >= decalage_y + 1 && y <= Graphics.size_y() - 1
+	then true
+	else false
+
 let trace t c =
 	Graphics.set_color c;
-	let (x, y) = t.(0) in
-	Graphics.moveto x y;
-	for i = 1 to ((Array.length t) - 1) do
+	let indice = ref (-1) in
+	for i = 0 to ((Array.length t) - 1) do
 		let (x, y) = t.(i) in
-		Graphics.lineto x y;
+		if is_in_fen x y && !indice == -1
+		then
+			begin
+				Graphics.moveto x y;
+				indice := i
+			end
+	done;
+	for i = !indice to ((Array.length t) - 1) do
+		let (x, y) = t.(i) in
+		if is_in_fen x y
+		then Graphics.lineto x y
+		else Graphics.lineto x 99
 	done
 
 let longueur i =
 	i.b -. i.a
 
+let is_in_fen x y =
+	if x <= (Graphics.size_x() - decalage_x) && y >= decalage_y
+	then true
+	else false
+
 let proportion i x =
-	(Util.abs_float (i.a -. x)) /. longueur i
+	(x -. i.a) /. longueur i
 
 let aux p n =
 	let res = p *. float_of_int n in

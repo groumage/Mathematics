@@ -4,13 +4,13 @@
 
 %token <float> FLOAT
 %token <string> VAR
-%token COS SIN SQRT EXP LN
+%token COS SIN SQRT EXP LN PUIS
 %token PLUS MINUS TIMES DIV
 %token LPAR RPAR
 %token EOL
-%left PLUS MINUS TIMES DIV
+%left PLUS MINUS
+%left TIMES DIV
 %left COS SIN SQRT EXP LN
-%nonassoc UMINUS
 %type <Function.formel> main
 %start main
 %%
@@ -22,6 +22,7 @@ main:
 expr:
 	|	FLOAT					{ flt $1 }
 	|	VAR						{ var $1 }
+	| 	FLOAT VAR 				{ mul (flt $1) (var $2) }
 	| 	LPAR expr RPAR			{ $2 }
 	| 	expr PLUS expr			{ add $1 $3 }
 	| 	PLUS expr				{ pos $2 }
