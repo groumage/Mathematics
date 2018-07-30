@@ -30,8 +30,10 @@ expr:
 	| 	expr MINUS expr			{ sub $1 $3 }
 	| 	expr TIMES expr			{ mul $1 $3 }
 	| 	expr DIV expr			{ div $1 $3 }
-	| 	COS expr				{ cos $2 }
+	| 	COS expr				{ mul (flt 1.) (cos $2) }
+	| 	FLOAT COS expr			{ mul (flt $1) (cos $3) }
 	|	SIN expr				{ sin $2 }
+	| 	FLOAT SIN expr			{ mul (flt $1) (sin $3) }
 	|	SQRT expr				{ sqrt $2 }
 	|	LN expr					{ lnp $2 }
 	| 	EXP expr				{ exp $2 }

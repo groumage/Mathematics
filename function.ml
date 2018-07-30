@@ -24,7 +24,6 @@ let rec simplify f x =
 Mul (Float (simplify_var f x), Var x)
 *)
 
-
 let rec string_fct f =
 	match f with
   		| Float f -> string_of_float f
@@ -39,6 +38,17 @@ let rec string_fct f =
 		| Puis (n, f) -> "(" ^ string_fct f ^ ")" ^ string_of_float n
 		| Sqrt f -> "sqrt (" ^ string_fct f ^ ")"
 		| Exp f -> "exp (" ^ string_fct f ^ ")"
+
+let is_float f =
+	match f with
+		| Float f -> true
+		| _ -> false
+
+let get_float f =
+	match f with
+		| Float f -> f
+		| _ -> failwith "get_float: a float is expected"
+
 let rec simplify f =
 	let rec is_zero f =
 		match f with
@@ -86,180 +96,41 @@ let rec simplify f =
 			| Cos f -> Cos (simplify_zero f)
 			| Sin f -> Sin (simplify_zero f)
 	in
-	let rec is_plus_minus_one f j =
-		match f with
-			| Float f when f = j -> true
-			| Float f -> false
-			| Var x -> false
-			| Add (f, g) -> are_plus_minus_one f g j
-			| Sub (f, g) -> are_plus_minus_one f g j
-			| _ -> false
-	and
-	are_plus_minus_one f g j =
-		match (f, g) with
-			| (Float f1, Float f2) when f1 +. f2 = j -> true
-			| (Float f1, Float f2) -> false
-			| (Var x, _) -> false
-			| (_, Var x) -> false
-			| (Add (f, g), Add (h, i)) -> are_plus_minus_one (Add (f, g)) (Add (h, i)) j
-			| (Sub (f, g), Sub (h, i)) -> are_plus_minus_one (Sub (f, g)) (Sub (h, i)) j
-			| (Add (f, g), Sub (h, i)) -> are_plus_minus_one (Add (f, g)) (Sub (h, i)) j
-			| (Sub (f, g), Add (h, i)) -> are_plus_minus_one (Sub (f, g)) (Add (h, i)) j
-			| _ -> false
-	in
-	let rec simplify_one f =
+	let rec calcul f res =
 		match f with
 			| Float f -> Float f
-			| Var x -> Var x
+			| Var x -> Mul (Float res, Var x)
 			| Add (f, g) -> begin
-								if is_plus_minus_one f 1. && is_plus_minus_one g 1.
-								then Float 2.
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
-								then Float (-2.)
-								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
-								then Float 0.
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
-								then Float 0.
-								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
-								then Add (Float 1., simplify_one g)
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
-								then Add (Float (-1.), simplify_one g)
-								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
-								then Add (Float 1., simplify_one g)
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
-								then Add (Float (-1.), simplify_one g)
-								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
-								then Add (simplify_one f, Float 1.)
-								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
-								then Add (simplify_one f, Float (-1.))
-								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
-								then Add (simplify_one f, Float 1.)
-								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
-								then Add (simplify_one f, Float (-1.))
-								else Add (simplify_one f, simplify_one g)
-							end
-			| Sub (f, g) -> begin
-								if is_plus_minus_one f 1. && is_plus_minus_one g 1.
-								then Float 0.
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
-								then Float 0.
-								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
-								then Float 2.
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
-								then Float (-2.)
-								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
-								then Sub (Float 1., simplify_one g)
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
-								then Sub (Float (-1.), simplify_one g)
-								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
-								then Sub (Float 1., simplify_one g)
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
-								then Sub (Float (-1.), simplify_one g)
-								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
-								then Sub (simplify_one f, Float 1.)
-								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
-								then Sub (simplify_one f, Float (-1.))
-								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
-								then Sub (simplify_one f, Float 1.)
-								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
-								then Sub (simplify_one f, Float (-1.))
-								else Sub (simplify_one f, simplify_one g)
+								if is_float f && is_float g
+								then Float (get_float f +. get_float g)
+								else if is_float f == false && is_float g
+								then Add (calcul f res, Float (get_float g))
+								else if is_float f && is_float g == false
+								then Add (Float (get_float f), calcul g res)
+								else Add (calcul f res, calcul g res)
 							end
 			| Mul (f, g) -> begin
-				print_string ((string_fct f) ^ " /  " ^ (string_fct g) ^ "\n");
-				(*print_string (string_of_bool ((is_plus_minus_one f (-1.))) ^ "   " ^ string_of_bool ((is_plus_minus_one g (-1.))) ^ "\n");
-				*)				if is_plus_minus_one f 1. && is_plus_minus_one g 1.
-								then Float 1.
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
-								then Float 1.
-								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
-								then Float (-1.)
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
-								then Float (-1.)
-								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
-								then simplify_one g
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
-								then Mul (Float (-1.), simplify_one g)
-								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
-								then simplify_one g
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
-								then Mul (Float (-1.), simplify_one g)
-								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
-								then simplify_one f
-								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
-								then Mul (simplify_one f, Float (-1.))
-								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
-								then simplify_one f
-								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
-								then Mul (simplify_one f, Float (-1.))
-								else Mul (simplify_one f, simplify_one g)
+								if is_float f && is_float g
+								then Float (get_float f +. get_float g)
+								else if is_float f == false && is_float g
+								then calcul f (res *. get_float g)
+								else if is_float f && is_float g == false
+								then calcul g (res *. get_float f)
+								else Mul (calcul f res, calcul g res)
 							end
-			| Div (f, g) -> begin
-								if is_plus_minus_one f 1. && is_plus_minus_one g 1.
-								then Float 1.
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
-								then Float 1.
-								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
-								then Float (-1.)
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
-								then Float (-1.)
-								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
-								then Div (Float 1., simplify_one g)
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
-								then Div (Float (-1.), simplify_one g)
-								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
-								then Div (Float 1., simplify_one g)
-								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
-								then Div (Float (-1.), simplify_one g)
-								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
-								then simplify_one f
-								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
-								then Mul (simplify_one f, Float (-1.))
-								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
-								then simplify_one f
-								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
-								then Mul (simplify_one f, Float (-1.))
-								else Div (simplify_one f, simplify_one g)
-							end
-			| Cos f -> Cos (simplify_one f)
-			| Sin f -> Sin (simplify_one f)
+			| Cos f -> Mul (Float res, Cos f)
+			| Sin f -> Mul (Float res, Sin f)
 	in
-simplify_zero (f)
-	(*let rec count_minus_plus f =
-		match f with
-			| Float f when f < 0. -> 1
-			| Float f when f >= 0. -> 0
-			| Var x -> 0
-			| Add (f, g) -> 0
-			| Sub (f, g) -> 0
-			| Mul (f, g) -> count_minus_plus f + count_minus_plus g
-			| Cos f -> 0
-			| Sin f -> 0
-	in
-	let rec delete_minus_plus f =
-		match f with
-			| Float f when (f = (-1.) || f = 1.) -> Float 1.
-			| Float f -> Float f
-			| Var x -> Var x
-			| Add (f, g) -> Add (delete_minus_plus f, delete_minus_plus g)
-			| Sub (f, g) -> Sub (delete_minus_plus f, delete_minus_plus g)
-			| Mul (f, g) -> Mul (delete_minus_plus f, delete_minus_plus g)
-			| Div (f, g) -> Div (delete_minus_plus f, delete_minus_plus g)
-			| Cos f -> Cos (delete_minus_plus f)
-			| Sin f -> Sin (delete_minus_plus f)
-	in
-	let rec simplify_minus_plus f =
+	let rec calcul_float f =
 		match f with
 			| Float f -> Float f
 			| Var x -> Var x
-			| Add (f, g) -> Add (simplify_minus_plus f, simplify_minus_plus g)
-			| Sub (f, g) -> Sub (simplify_minus_plus f, simplify_minus_plus g)
-			| Mul (f, g) -> if count_minus_plus (Mul (f, g)) mod 2 == 0
-							then Mul (Float (1.), Mul (delete_minus_plus f, delete_minus_plus g))
-							else Mul (Float (1.), Mul (delete_minus_plus f, delete_minus_plus g))
-			| Cos f -> Cos (simplify_minus_plus f)
-			| Sin f -> Sin (simplify_minus_plus f)
-	in*)
+			| Mul (Float f, Cos c) -> calcul (Cos c) f
+			| Mul (Float f, Sin s) -> calcul (Sin s) f
+			| Add (f, g) -> calcul (Add (f, g)) 1.
+			| Mul (f, g) -> calcul (Mul (f, g)) 2.
+	in
+simplify_zero (calcul_float f)
 
 let rec deriv f x =
 	match f with
@@ -334,4 +205,218 @@ let var v = Var v
 let sqrt e = Sqrt e
 let exp e = Exp e
 let lnp e = Ln e
-	
+
+	(*let rec prod f =
+		match f with
+			| Float f -> f
+			| Var x -> 1.
+			| Mul (f, g) -> prod f *. prod g
+			| _ -> 1.
+	in
+	let rec calcul f =
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Mul (f, g) -> Mul (prod f *. prod g, *)
+	(*let rec is_one f =
+		match f with
+			| Float f when f = 1. -> true
+			| Float f -> false
+			| Var x -> false
+			| Add (f, g) -> are_one f g +.
+			| Sub (f, g) -> are_one f g -.
+			| Mul (f, g) -> are_one f g *.
+			| Div (f, g) -> are_one f g /.
+	and
+	are_one f g op =
+		match (f, g) with
+			| (Float f1, Float f2) when f1 op f2 = 1. -> true
+			| (Float f1, Float f2) -> false
+			| (Var x, _) -> false
+			| (_, Var x) -> false
+			| (Add (f, g), Add (h, i)) -> are_one (Add (f, g)) (Add (h, i)) +.
+	in*)
+	(*let rec is_plus_minus_one f j =
+		match f with
+			| Float f when f = j -> true
+			| Mul (f, g) -> is_plus_minus_one f j && is_plus_minus_one g j
+			| _ -> false
+	and
+	are_plus_minus_one f g j =
+		match (f, g) with
+			| (Float f1, Float f2) when f1 +. f2 = j -> true
+			| (Float f1, Float f2) -> false
+			| (Var x, _) -> false
+			| (_, Var x) -> false
+			| (Add (f, g), Add (h, i)) -> are_plus_minus_one (Add (f, g)) (Add (h, i)) j
+			| (Sub (f, g), Sub (h, i)) -> are_plus_minus_one (Sub (f, g)) (Sub (h, i)) j
+			| (Add (f, g), Sub (h, i)) -> are_plus_minus_one (Add (f, g)) (Sub (h, i)) j
+			| (Sub (f, g), Add (h, i)) -> are_plus_minus_one (Sub (f, g)) (Add (h, i)) j
+			| (Mul (f, g), Mul (h, i)) -> are_plus_minus_one (Mul (f, g)) (Mul (h, i)) j
+			| _ -> false
+	in
+	let rec count_minus f =
+		match f with
+			| Float f when f = -1. -> 1
+			| Var x -> 0
+			| Mul (f, g) -> count_minus f + count_minus g
+			| _ -> 0
+	in
+	let rec simplify_one f =
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (f, g) -> begin
+								if is_plus_minus_one f 1. && is_plus_minus_one g 1.
+								then Float 2.
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
+								then Float (-2.)
+								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
+								then Float 0.
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
+								then Float 0.
+								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
+								then Add (Float 1., simplify_one g)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
+								then Add (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
+								then Add (Float 1., simplify_one g)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
+								then Add (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
+								then Add (simplify_one f, Float 1.)
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
+								then Add (simplify_one f, Float (-1.))
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
+								then Add (simplify_one f, Float 1.)
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
+								then Add (simplify_one f, Float (-1.))
+								else Add (simplify_one f, simplify_one g)
+							end
+			| Sub (f, g) -> begin
+								if is_plus_minus_one f 1. && is_plus_minus_one g 1.
+								then Float 0.
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
+								then Float 0.
+								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
+								then Float 2.
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
+								then Float (-2.)
+								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
+								then Sub (Float 1., simplify_one g)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
+								then Sub (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
+								then Sub (Float 1., simplify_one g)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
+								then Sub (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
+								then Sub (simplify_one f, Float 1.)
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
+								then Sub (simplify_one f, Float (-1.))
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
+								then Sub (simplify_one f, Float 1.)
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
+								then Sub (simplify_one f, Float (-1.))
+								else Sub (simplify_one f, simplify_one g)
+							end
+			| Mul (f, g) -> begin
+								print_string (string_of_bool (is_plus_minus_one f (-1.)));
+								print_string "\n";
+								print_string (string_fct f);
+								print_string "\n";
+								print_string (string_of_bool (is_plus_minus_one g (-1.)));
+								print_string "\n";
+								print_string (string_fct g);
+								print_string "\n\n";
+								if is_plus_minus_one f 1. && is_plus_minus_one g 1.
+								then Float 1.
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
+								then Float 1.
+								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
+								then Float (-1.)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
+								then Float (-1.)
+								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
+								then simplify_one g
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
+								then Mul (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
+								then simplify_one g
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
+								then Mul (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
+								then simplify_one f
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
+								then Mul (simplify_one f, Float (-1.))
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
+								then simplify_one f
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
+								then Mul (simplify_one f, Float (-1.))
+								else Mul (simplify_one f, simplify_one g)
+							end
+			| Div (f, g) -> begin
+								if is_plus_minus_one f 1. && is_plus_minus_one g 1.
+								then Float 1.
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.)
+								then Float 1.
+								else if is_plus_minus_one f (1.) && is_plus_minus_one g (-1.)
+								then Float (-1.)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1.
+								then Float (-1.)
+								else if is_plus_minus_one f 1. && is_plus_minus_one g 1. == false
+								then Div (Float 1., simplify_one g)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g 1. == false
+								then Div (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. && is_plus_minus_one g (-1.) == false
+								then Div (Float 1., simplify_one g)
+								else if is_plus_minus_one f (-1.) && is_plus_minus_one g (-1.) == false
+								then Div (Float (-1.), simplify_one g)
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g 1.
+								then simplify_one f
+								else if is_plus_minus_one f 1. == false && is_plus_minus_one g (-1.)
+								then Mul (simplify_one f, Float (-1.))
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g 1.
+								then simplify_one f
+								else if is_plus_minus_one f (-1.) == false && is_plus_minus_one g (-1.)
+								then Mul (simplify_one f, Float (-1.))
+								else Div (simplify_one f, simplify_one g)
+							end
+			| Cos f -> Cos (simplify_one f)
+			| Sin f -> Sin (simplify_one f)
+	in*)
+	(*let rec count_minus_plus f =
+		match f with
+			| Float f when f < 0. -> 1
+			| Float f when f >= 0. -> 0
+			| Var x -> 0
+			| Add (f, g) -> 0
+			| Sub (f, g) -> 0
+			| Mul (f, g) -> count_minus_plus f + count_minus_plus g
+			| Cos f -> 0
+			| Sin f -> 0
+	in
+	let rec delete_minus_plus f =
+		match f with
+			| Float f when (f = (-1.) || f = 1.) -> Float 1.
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (f, g) -> Add (delete_minus_plus f, delete_minus_plus g)
+			| Sub (f, g) -> Sub (delete_minus_plus f, delete_minus_plus g)
+			| Mul (f, g) -> Mul (delete_minus_plus f, delete_minus_plus g)
+			| Div (f, g) -> Div (delete_minus_plus f, delete_minus_plus g)
+			| Cos f -> Cos (delete_minus_plus f)
+			| Sin f -> Sin (delete_minus_plus f)
+	in
+	let rec simplify_minus_plus f =
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (f, g) -> Add (simplify_minus_plus f, simplify_minus_plus g)
+			| Sub (f, g) -> Sub (simplify_minus_plus f, simplify_minus_plus g)
+			| Mul (f, g) -> if count_minus_plus (Mul (f, g)) mod 2 == 0
+							then Mul (Float (1.), Mul (delete_minus_plus f, delete_minus_plus g))
+							else Mul (Float (1.), Mul (delete_minus_plus f, delete_minus_plus g))
+			| Cos f -> Cos (simplify_minus_plus f)
+			| Sin f -> Sin (simplify_minus_plus f)
+	in*)
