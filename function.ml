@@ -27,11 +27,19 @@ Mul (Float (simplify_var f x), Var x)
 let rec string_fct f =
 	match f with
   		| Float f -> string_of_float f
-  		| Var v -> "x"
-		| Add (f, g) -> string_fct f ^ " + " ^ string_fct g
-		| Sub (f, g) -> string_fct f ^ " - " ^ string_fct g
-		| Mul (f, g) -> string_fct f ^ " * " ^ string_fct g
+  		| Var v -> v
+		| Mul (f, g) -> (*begin
+							if f == Float 1. && g == Float 1.
+							then string_fct f
+							else if f == Float 1. && g != Float 1.
+							then string_fct g
+							else if f != Float 1. && g == Float 1.
+							then string_fct f
+							else*) "(" ^ string_fct f ^ " * " ^ string_fct g ^ ")"
+						(*end*)
 		| Div (f, g) -> string_fct f ^ " / " ^ string_fct g
+		| Add (f, g) -> "(" ^ string_fct f ^ " + " ^ string_fct g ^ ")"
+		| Sub (f, g) -> string_fct f ^ " - " ^ string_fct g
 		| Ln f -> "ln (" ^ string_fct f ^ ")"
 		| Cos f -> "cos (" ^ string_fct f ^ ")"
 		| Sin f -> "sin (" ^ string_fct f ^ ")"
@@ -48,6 +56,16 @@ let get_float f =
 	match f with
 		| Float f -> f
 		| _ -> failwith "get_float: a float is expected"
+
+let is_var v =
+	match v with
+		| Var v -> true
+		| _ -> false
+
+let get_var v =
+	match v with
+		| Var v -> v
+		| _ -> failwith "get_var: a var is expected"
 
 let rec simplify f =
 	let rec is_zero f =
@@ -131,16 +149,15 @@ let rec simplify f =
 			| Sin f -> Mul (Float res, Sin f)
 	in
 	let rec calcul_float f =
-		print_string (string_fct f); print_string "\n";
 		match f with
 			| Float f -> Float f
 			| Var x -> Var x
-			| Add (f, g) when is_float f -> calcul g (get_float f)
-			| Add (f, g) when is_float g -> calcul f (get_float g)
-			| Add (f, g) -> Add ((calcul_float f), (calcul_float g))
 			| Mul (f, g) when is_float f -> calcul g (get_float f)
 			| Mul (f, g) when is_float g -> calcul f (get_float g)
 			| Mul (f, g) -> Mul (calcul_float f, calcul_float g)
+			| Add (f, g) when is_float f -> calcul g (get_float f)
+			| Add (f, g) when is_float g -> calcul f (get_float g)
+			| Add (f, g) -> Add ((calcul_float f), (calcul_float g))
 			| Sub (f, g) when is_float f -> calcul g (get_float f)
 			| Sub (f, g) when is_float g -> calcul f (get_float g)
 			| Sub (f, g) -> Sub (calcul_float f, calcul_float g)
@@ -151,7 +168,19 @@ let rec simplify f =
 			| Mul (Float f, Sin s) -> calcul (Sin s) f
 			| Mul (f, g) -> calcul (Mul (f, g)) 2.*)
 	in
-simplify_zero (calcul_float f)
+	let rec bidule f =
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Mul (f, g) when is_float f && is_float g -> Float (get_float f *. get_float g)
+			| Mul (f, g) when is_float f && is_var g -> Mul (Float (get_float f), Var (get_var g))
+			| Mul (f, g) when is_var f && is_float g -> Mul (Float (get_float g), Var (get_var f))
+			| Add (f, g) when is_float f && is_float g -> Float (get_float f +. get_float g)
+			| Add (f, g) when is_var f && is_var g -> Mul (Float 2., Var (get_var f))
+			| Mul (f, g) -> bidule (Mul (bidule f, bidule g))
+			| Add (f, g) -> bidule (Add (bidule f, bidule g))
+	in
+simplify_zero (bidule f)
 
 let rec deriv f x =
 	match f with
@@ -160,12 +189,12 @@ let rec deriv f x =
   		| Var v -> Float 0.
 		| Add (f, g) ->	Add (deriv f x, deriv g x)
 		| Sub (f, g) -> Sub (deriv f x, deriv g x)
-		| Mul (f, g) -> Add (Mul (f, deriv g x), Mul (g, deriv f x))
+		| Mul (f, g) -> Add (Mul (deriv f x, g), Mul (f, deriv g x))
 		| Div (f, g) -> Div (Sub (Mul (deriv f x, g), Mul (f, deriv g x)), Mul (g, g))
 		| Ln f -> Div (deriv f x, f)
 		| Cos f -> Mul (deriv f x, Mul (Sin f, Float (-1.)))
 		| Sin f -> Mul (deriv f x, Cos f)
-		| Puis (n, f) -> Mul (deriv f x, Mul (Float n, Puis (n -. 1., f)))
+		| Puis (n, f) -> Mul (Float n, Mul (deriv f x, Puis (n -. 1., f)))
 		| Sqrt f -> Div (deriv f x, Mul (Float 2., Sqrt f))
 		| Exp f -> Mul (deriv f x, Exp f)
 
