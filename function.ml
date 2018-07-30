@@ -104,14 +104,23 @@ let rec simplify f =
 								if is_float f && is_float g
 								then Float (get_float f +. get_float g)
 								else if is_float f == false && is_float g
-								then Add (calcul f res, Float (get_float g))
+								then calcul f (res +. get_float g)
 								else if is_float f && is_float g == false
-								then Add (Float (get_float f), calcul g res)
+								then calcul g (res +. get_float f)
 								else Add (calcul f res, calcul g res)
+							end
+			| Sub (f, g) -> begin
+								if is_float f && is_float g
+								then Float (get_float f -. get_float g)
+								else if is_float f == false && is_float g
+								then calcul f (res -. get_float g)
+								else if is_float f && is_float g == false
+								then calcul g (res -. get_float f)
+								else Sub (calcul f res, calcul g res)
 							end
 			| Mul (f, g) -> begin
 								if is_float f && is_float g
-								then Float (get_float f +. get_float g)
+								then Float (get_float f *. get_float g)
 								else if is_float f == false && is_float g
 								then calcul f (res *. get_float g)
 								else if is_float f && is_float g == false
@@ -122,13 +131,25 @@ let rec simplify f =
 			| Sin f -> Mul (Float res, Sin f)
 	in
 	let rec calcul_float f =
+		print_string (string_fct f); print_string "\n";
 		match f with
 			| Float f -> Float f
 			| Var x -> Var x
+			| Add (f, g) when is_float f -> calcul g (get_float f)
+			| Add (f, g) when is_float g -> calcul f (get_float g)
+			| Add (f, g) -> Add ((calcul_float f), (calcul_float g))
+			| Mul (f, g) when is_float f -> calcul g (get_float f)
+			| Mul (f, g) when is_float g -> calcul f (get_float g)
+			| Mul (f, g) -> Mul (calcul_float f, calcul_float g)
+			| Sub (f, g) when is_float f -> calcul g (get_float f)
+			| Sub (f, g) when is_float g -> calcul f (get_float g)
+			| Sub (f, g) -> Sub (calcul_float f, calcul_float g)
+			(*| Mul (Float f, Cos c) -> calcul (Cos c) f
 			| Mul (Float f, Cos c) -> calcul (Cos c) f
+			| Add (f, g) -> Add (calcul_float g, calcul_float f)
 			| Mul (Float f, Sin s) -> calcul (Sin s) f
-			| Add (f, g) -> calcul (Add (f, g)) 1.
-			| Mul (f, g) -> calcul (Mul (f, g)) 2.
+			| Mul (Float f, Sin s) -> calcul (Sin s) f
+			| Mul (f, g) -> calcul (Mul (f, g)) 2.*)
 	in
 simplify_zero (calcul_float f)
 

@@ -32,7 +32,7 @@ expr:
 	| 	expr DIV expr			{ div $1 $3 }
 	| 	COS expr				{ mul (flt 1.) (cos $2) }
 	| 	FLOAT COS expr			{ mul (flt $1) (cos $3) }
-	|	SIN expr				{ sin $2 }
+	|	SIN expr				{ mul (flt 1.) (sin $2) }
 	| 	FLOAT SIN expr			{ mul (flt $1) (sin $3) }
 	|	SQRT expr				{ sqrt $2 }
 	|	LN expr					{ lnp $2 }
