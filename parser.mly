@@ -21,8 +21,8 @@ main:
 
 expr:
 	|	FLOAT					{ flt $1 }
-	|	VAR						{ var $1 }
-	| 	FLOAT VAR 				{ mul (flt $1) (var $2) }
+	|	VAR						{ puis (var $1) (flt 1.) }
+	| 	FLOAT VAR 				{ var $2 }
 	| 	LPAR expr RPAR			{ $2 }
 	| 	expr PLUS expr			{ add $1 $3 }
 	| 	PLUS expr				{ pos $2 }
@@ -30,9 +30,9 @@ expr:
 	| 	expr MINUS expr			{ sub $1 $3 }
 	| 	expr TIMES expr			{ mul $1 $3 }
 	| 	expr DIV expr			{ div $1 $3 }
-	| 	COS expr				{ mul (flt 1.) (cos $2) }
+	| 	COS expr				{ cos $2 }
 	| 	FLOAT COS expr			{ mul (flt $1) (cos $3) }
-	|	SIN expr				{ mul (flt 1.) (sin $2) }
+	|	SIN expr				{ sin $2 }
 	| 	FLOAT SIN expr			{ mul (flt $1) (sin $3) }
 	|	SQRT expr				{ sqrt $2 }
 	|	LN expr					{ lnp $2 }
