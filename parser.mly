@@ -8,9 +8,11 @@
 %token PLUS MINUS TIMES DIV
 %token LPAR RPAR
 %token EOL
+%left LPAR RPAR
 %left COS SIN SQRT EXP LN
 %left PLUS MINUS
 %left TIMES DIV
+%left PUIS
 %type <Function.formel> main
 %start main
 %%
@@ -22,14 +24,16 @@ main:
 expr:
 	|	FLOAT					{ flt $1 }
 	|	VAR						{ var $1 }
-	| 	LPAR expr RPAR			{ $2 }
+	| 	FLOAT VAR 				{ mul (flt $1) (var $2)}
 	| 	expr TIMES expr			{ mul $1 $3 }
 	| 	expr DIV expr			{ div $1 $3 }
 	| 	expr PLUS expr			{ add $1 $3 }
 	| 	expr MINUS expr			{ sub $1 $3 }
+	| 	expr PUIS expr			{ puis $1 $3 }
+	| 	COS expr				{ cos $2 }
+	| 	LPAR expr RPAR			{ $2 }
 	| 	PLUS expr				{ pos $2 }
 	|	MINUS expr				{ neg $2 }
-	| 	COS expr				{ cos $2 }
 	| 	FLOAT COS expr			{ mul (flt $1) (cos $3) }
 	|	SIN expr				{ sin $2 }
 	| 	FLOAT SIN expr			{ mul (flt $1) (sin $3) }

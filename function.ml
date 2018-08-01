@@ -12,31 +12,11 @@ type formel =
 	| Sqrt of formel
 	| Exp of formel
 
-(*
-let rec simplify f x =
-	let rec simplify_var f x =
-		match f with
-			| Float f -> 0.
-			| Var v when v = x -> 1.
-			| Var v -> 0.
-			| Add (f, g) ->	simplify_var f x +. simplify_var g x
-	in
-Mul (Float (simplify_var f x), Var x)
-*)
-
 let rec string_fct f =
 	match f with
   		| Float f -> string_of_float f
   		| Var v -> v
-		| Mul (f, g) -> (*begin
-							if f == Float 1. && g == Float 1.
-							then string_fct f
-							else if f == Float 1. && g != Float 1.
-							then string_fct g
-							else if f != Float 1. && g == Float 1.
-							then string_fct f
-							else*) "(" ^ string_fct f ^ " * " ^ string_fct g ^ ")"
-						(*end*)
+		| Mul (f, g) -> "(" ^ string_fct f ^ " * " ^ string_fct g ^ ")"
 		| Div (f, g) -> "(" ^ string_fct f ^ " / " ^ string_fct g ^ ")"
 		| Add (f, g) -> "(" ^ string_fct f ^ " + " ^ string_fct g ^ ")"
 		| Sub (f, g) -> string_fct f ^ " - " ^ string_fct g
@@ -47,6 +27,128 @@ let rec string_fct f =
 		| Sqrt f -> "sqrt (" ^ string_fct f ^ ")"
 		| Exp f -> "exp (" ^ string_fct f ^ ")"
 
+let rec simplify f =
+	let f_simplify = simp f in
+	if f_simplify = f 
+	then f_simplify 
+	else simplify f_simplify
+	and simp f = 
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (Float 0., f) -> simp f
+			| Add (f, Float 0.) -> simp f
+			| Add (Float f1, Float f2) -> Float (f1 +. f2)
+			| Add (f, g) when f = g -> simp (Mul (Float 2., f))
+			| Add (f, g) -> Add (simp f, simp g)
+			| Sub (Float 0., f) -> simp (Mul (Float (-1.), f))
+			| Sub (f, Float 0.) -> simp f
+			| Sub (Float f1, Float f2) -> Float (f1 -. f2)
+			| Sub (f, g) when f = g -> Float 0.
+			| Sub (f, g) -> Sub (simp f, simp g)
+			| Div (Float 0., f) -> Float 0.
+			| Div (f, Float 1.) -> simp f
+			| Div (Float f1, Float f2) -> Float (f1 /. f2)
+			| Div (f, g) when f = g -> Float 1.
+			| Div (f, g) -> Div (simp f, simp g)
+			| Mul (Float 1., f) -> simp f
+			| Mul (f, Float 1.) -> simp f
+			| Mul (Float 0., f) -> Float 0.
+			| Mul (f, Float 0.) -> Float 0.
+			| Mul (Float f1, Float f2) -> Float (f1 *. f2)
+			| Mul (f, g) when f = g -> simp (Puis (simp f, Float 2.))
+			| Mul (Puis (f, g), h) when f = h -> Puis (simp f, simp (Add (g, Float 1.)))
+			| Mul (f, g) -> Mul (simp f, simp g)
+			| Puis (f, Float 0.) -> Float 1.
+			| Puis (Float 0., f) -> Float 0.
+			| Puis (f, Float 1.) -> simp f
+			| Puis (f, g) -> Puis (simp f, simp g)
+			| Ln f -> Ln (simp f)
+			| Cos f -> Cos (simp f)
+			| Sin f -> Sin (simp f)
+			| Sqrt f -> Sqrt (simp f)
+			| Exp f -> (simp f)
+
+let rec deriv f x =
+	match f with
+  		| Float f -> Float 0.
+  		| Var v when v = x -> Float 1.
+  		| Var v -> Float 0.
+		| Add (f, g) ->	Add (deriv f x, deriv g x)
+		| Sub (f, g) -> Sub (deriv f x, deriv g x)
+		| Mul (f, g) -> Add (Mul (deriv f x, g), Mul (f, deriv g x))
+		| Div (f, g) -> Div (Sub (Mul (deriv f x, g), Mul (f, deriv g x)), Mul (g, g))
+		| Ln f -> Div (deriv f x, f)
+		| Cos f -> Mul (deriv f x, Mul (Sin f, Float (-1.)))
+		| Sin f -> Mul (deriv f x, Cos f)
+		| Puis (f, g) -> Mul (Puis (f, g), Add (Mul (deriv g x, Ln f), Mul (g, Div (deriv f x, f))))
+		| Sqrt f -> Div (deriv f x, Mul (Float 2., Sqrt f))
+		| Exp f -> Mul (deriv f x, Exp f)
+
+let rec integrate f x =
+	match f with
+		| Float f -> Mul (Var x, Float f)
+		| Var v when v = x -> Mul (Var x, Var x)
+		| Var v -> Var v
+		| Add (f, g) -> Add (integrate f x, integrate g x)
+		| Sub (f, g) -> Sub (integrate f x, integrate g x)
+
+let is_entier e =
+	if e = float_of_int (int_of_float e)
+	then true
+	else false
+
+let rec calcul_fct f x =
+	match f with
+  		| Float f -> f
+  		| Var v -> x
+		| Add (f, g) -> calcul_fct f x +. calcul_fct g x
+		| Sub (f, g) -> calcul_fct f x -. calcul_fct g x
+		| Mul (f, g) -> calcul_fct f x *. calcul_fct g x
+		| Div (f, g) -> calcul_fct f x /. calcul_fct g x
+		| Ln f -> log (calcul_fct f x)
+		| Cos f -> cos (calcul_fct f x)
+		| Sin f -> sin (calcul_fct f x)
+		| Puis (f, g) -> if calcul_fct f x > 0. then exp (calcul_fct g x *. log (calcul_fct f x))
+						else if calcul_fct f x = 0. then 0.
+						else if is_entier (calcul_fct g x) then Util.pow_float (calcul_fct f x) (int_of_float (calcul_fct g x))
+						else failwith "calcul_fct: non-real"
+		| Sqrt f -> sqrt (calcul_fct f x)
+		| Exp f -> exp (calcul_fct f x)
+
+
+let rec free_variables_present f x =
+	match f with
+  		| Float f -> false
+  		| Var v when v = x-> false
+  		| Var _ -> true
+		| Add (f, g)
+		| Sub (f, g)
+		| Mul (f, g)
+		| Puis (f, g) 
+		| Div (f, g) -> free_variables_present f x || free_variables_present g x
+		| Ln f
+		| Cos f
+		| Sin f
+		| Sqrt f
+		| Exp f -> free_variables_present f x
+
+let flt f = Float f
+let add e1 e2 = Add (e1, e2)
+let sub e1 e2 = Sub (e1, e2)
+let mul e1 e2 = Mul (e1, e2)
+let div e1 e2 = Div (e1, e2)
+let puis e1 e2 = Puis (e1, e2)
+let neg e = Mul (Float (-1.), e)
+let pos e = Mul (Float 1., e)
+let cos e = Cos e
+let sin e = Sin e
+let var v = Var v
+let sqrt e = Sqrt e
+let exp e = Exp e
+let lnp e = Ln e
+
+(*
 let is_float f =
 	match f with
 		| Float f -> true
@@ -65,43 +167,19 @@ let is_var v =
 let get_var v =
 	match v with
 		| Var v -> v
-		| _ -> failwith "get_var: a var is expected"
-
-let rec simplify e =
-	let e' = simp e in
-	if e' = e then e' else simplify e'
-	and simp f = 
-	print_string (string_fct f);
-	print_string "\n";
+		| _ -> failwith "get_var: a var is expected"*)
+			(*
+(*
+let rec simplify f x =
+	let rec simplify_var f x =
 		match f with
-			| Float f -> Float f
-			| Var x -> Var x
-			| Add (Float 0., f) -> simp f
-			| Add (f, Float 0.) -> simp f
-			| Add (f, g) when f = g -> simp (Mul (Float 2., f))
-			| Add (f, g) -> Add (simp f, simp g)
-			| Sub (Float 0., f) -> simp (Mul (Float (-1.), f))
-			| Sub (f, Float 0.) -> simp f
-			| Sub (f, g) when f = g -> Float 0.
-			| Sub (f, g) -> Sub (simp f, simp g)
-			| Div (Float 0., f) -> Float 0.
-			| Div (f, Float 1.) -> simp f
-			| Div (f, g) when f = g -> Float 1.
-			| Div (f, g) -> Div (simp f, simp g)
-			| Mul (Float 1., f) -> simp f
-			| Mul (f, Float 1.) -> simp f
-			| Mul (Float 0., f) -> Float 0.
-			| Mul (f, Float 0.) -> Float 0.
-			| Mul (f, g) when f = g -> simp (Puis (f, Float 2.))
-			| Mul (Puis (f, g), h) when f = h -> Puis (simp f, simp (Add (g, Float 1.)))
-			| Mul (f, g) -> Mul (simp f, simp g)
-			| Puis (f, Float 0.) -> Float 1.
-			| Puis (Float 0., f) -> Float 0.
-			| Puis (f, Float 1.) -> simp f
-			| Puis (f, g) -> Puis (simp f, simp g)
-
-
-
+			| Float f -> 0.
+			| Var v when v = x -> 1.
+			| Var v -> 0.
+			| Add (f, g) ->	simplify_var f x +. simplify_var g x
+	in
+Mul (Float (simplify_var f x), Var x)
+*)
 	(*let rec is_zero f =
 		match f with
 			| Float f when f = 0. -> true
@@ -195,87 +273,6 @@ let rec simplify e =
 			| Puis (Float f, g) -> Puis (Float f, simplify_op g)
 			| Puis (f, g) -> Puis (simplify_op f, simplify_op g)
 	in*)
-
-let rec deriv f x =
-	match f with
-  		| Float f -> Float 0.
-  		| Var v when v = x -> Float 1.
-  		| Var v -> Float 0.
-		| Add (f, g) ->	Add (deriv f x, deriv g x)
-		| Sub (f, g) -> Sub (deriv f x, deriv g x)
-		| Mul (f, g) -> Add (Mul (deriv f x, g), Mul (f, deriv g x))
-		| Div (f, g) -> Div (Sub (Mul (deriv f x, g), Mul (f, deriv g x)), Mul (g, g))
-		| Ln f -> Div (deriv f x, f)
-		| Cos f -> Mul (deriv f x, Mul (Sin f, Float (-1.)))
-		| Sin f -> Mul (deriv f x, Cos f)
-		| Puis (f, g) -> Mul (Puis (f, g), Add (Mul (deriv g x, Ln f), Mul (g, Div (deriv f x, f))))
-		| Sqrt f -> Div (deriv f x, Mul (Float 2., Sqrt f))
-		| Exp f -> Mul (deriv f x, Exp f)
-
-let rec integrate f x =
-	match f with
-		| Float f -> Mul (Var x, Float f)
-		| Var v when v = x -> Mul (Var x, Var x)
-		| Var v -> Var v
-		| Add (f, g) -> Add (integrate f x, integrate g x)
-		| Sub (f, g) -> Sub (integrate f x, integrate g x)
-
-let is_entier e =
-	if e = float_of_int (int_of_float e)
-	then true
-	else false
-
-let rec calcul_fct f x =
-	match f with
-  		| Float f -> f
-  		| Var v -> x
-		| Add (f, g) -> calcul_fct f x +. calcul_fct g x
-		| Sub (f, g) -> calcul_fct f x -. calcul_fct g x
-		| Mul (f, g) -> calcul_fct f x *. calcul_fct g x
-		| Div (f, g) -> calcul_fct f x /. calcul_fct g x
-		| Ln f -> log (calcul_fct f x)
-		| Cos f -> cos (calcul_fct f x)
-		| Sin f -> sin (calcul_fct f x)
-		| Puis (f, g) -> if calcul_fct f x > 0. then exp (calcul_fct g x *. log (calcul_fct f x))
-						else if calcul_fct f x = 0. then 0.
-						else if is_entier (calcul_fct g x) then Util.pow_float (calcul_fct f x) (int_of_float (calcul_fct g x))
-						else failwith "calcul_fct: non-real"
-		| Sqrt f -> sqrt (calcul_fct f x)
-		| Exp f -> exp (calcul_fct f x)
-
-
-let rec free_variables_present f x =
-	match f with
-  		| Float f -> false
-  		| Var v when v = x-> false
-  		| Var _ -> true
-		| Add (f, g)
-		| Sub (f, g)
-		| Mul (f, g)
-		| Puis (f, g) 
-		| Div (f, g) -> free_variables_present f x || free_variables_present g x
-		| Ln f
-		| Cos f
-		| Sin f
-		| Sqrt f
-		| Exp f -> free_variables_present f x
-
-
-let flt f = Float f
-let add e1 e2 = Add (e1, e2)
-let sub e1 e2 = Sub (e1, e2)
-let mul e1 e2 = Mul (e1, e2)
-let div e1 e2 = Div (e1, e2)
-let puis e1 e2 = Puis (e1, e2)
-let neg e = Mul (Float (-1.), e)
-let pos e = Mul (Float 1., e)
-let cos e = Cos e
-let sin e = Sin e
-let var v = Var v
-let sqrt e = Sqrt e
-let exp e = Exp e
-let lnp e = Ln e
-			(*
 			| Mul (f, g) when is_float f && is_var g -> Mul (Float (get_float f), Var (get_var g))
 			| Mul (f, g) when is_var f && is_float g -> Mul (Float (get_float g), Var (get_var f))
 			| Add (f, g) when is_var f && is_var g -> Mul (Float 2., Var (get_var f))

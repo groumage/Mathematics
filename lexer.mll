@@ -13,6 +13,7 @@ rule token = parse
   | '/'                 { DIV }
   | '('                 { LPAR }
   | ')'                 { RPAR }
+  | '^'                 { PUIS }
   | "cos"               { COS }
   | "sin"               { SIN }
   | "sqrt"              { SQRT }
