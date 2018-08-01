@@ -10,10 +10,10 @@ let decalage_x = 100
 let decalage_y = 100
 let longueur_repere_visu = 3
 let gray = Graphics.rgb 128 128 128
-let max_abs = ref 10.
-let min_abs = ref (-15.)
-let max_ord = ref 10.
-let min_ord = ref (-10.)
+let max_abs = ref 20.
+let min_abs = ref (-20.)
+let max_ord = ref 20.
+let min_ord = ref (-20.)
 
 let decoupe_intervalle i n =
 	let tab = Array.make (n+1) 0. in
@@ -28,20 +28,28 @@ let longueur i =
 
 let draw_frame_graph dim_x dim_y =
 	Graphics.set_color Graphics.black;
-	Graphics.draw_rect 0 (decalage_y - 1) (dim_x - decalage_x) (dim_y - decalage_y)
+	Graphics.draw_rect 0 (decalage_y) (dim_x - decalage_x) (dim_y - decalage_y - 1)
 
 let draw_center_lines_graph dim_x dim_y x1 x2 y1 y2 =
 	Graphics.set_color gray;
-	Graphics.moveto 1 ((dim_y / 2) + (decalage_y / 2));
-	Graphics.lineto ((dim_x - decalage_x) - 1) ((dim_y / 2) + (decalage_y / 2));
-	Graphics.moveto ((dim_x / 2) - (decalage_x / 2)) (decalage_y - 1);
-	Graphics.lineto ((dim_x / 2) - (decalage_x / 2)) (dim_y - 2);
 	let longueur_abscisse = dim_x - 2 - decalage_x in
 	let longueur_ordonnee = dim_y - 2 - decalage_y in
 	let nb_traits_abs = int_of_float (x2 -. x1) in
 	let nb_traits_ord = int_of_float (y2 -. y1) in
 	let pas_abs = longueur_abscisse / nb_traits_abs in
 	let pas_ord = longueur_ordonnee / nb_traits_ord in
+	if x1 <= 0. && 0. <= x2
+	then
+	begin
+	Graphics.moveto ((int_of_float (Util.abs_float x1)) * pas_abs + 1) dim_y;
+	Graphics.lineto ((int_of_float (Util.abs_float x1)) * pas_abs + 1) decalage_y
+	end;
+	if y1 <= 0. && 0. <= y2
+	then
+	begin
+	Graphics.moveto 0 (dim_y - ((int_of_float (Util.abs_float y2)) * pas_ord + 1));
+	Graphics.lineto (dim_x - decalage_x) (dim_y - ((int_of_float (Util.abs_float y2)) * pas_ord + 1))
+	end;
 	for i = 1 to nb_traits_ord - 1 do
 		for j = 1 to nb_traits_abs - 1 do
 			Graphics.moveto (1 + j * pas_abs) (dim_y - (1 + i * pas_ord - longueur_repere_visu));
@@ -88,7 +96,7 @@ let trace t c =
 		Graphics.lineto x y
 	done;
 	Graphics.set_color Graphics.white;
-	Graphics.fill_rect 0 0 902 (decalage_y - 1)
+	Graphics.fill_rect 0 0 (Graphics.size_x()) (decalage_y - 1)
 
 let print_fct f =
 	Graphics.set_color Graphics.black;
@@ -110,7 +118,7 @@ let aux2 i n x =
 	aux (proportion i x) n
 	
 let conversion fen p =
-	((aux2 fen.abs (Graphics.size_x() - decalage_x - 2) p.x) + 1, (aux2 fen.ord (Graphics.size_y() - decalage_y) p.y) + decalage_y)
+	((aux2 fen.abs (Graphics.size_x() - decalage_x) p.x), (aux2 fen.ord (Graphics.size_y() - decalage_y) p.y) + decalage_y)	
 	
 let en_tableau_pixel fen line_ply =
 	let t = Array.make (Array.length line_ply) (0,0) in
