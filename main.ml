@@ -78,7 +78,7 @@ let main =
 						end
 					else
 						begin
-							let fen = Graph.create_fenetre 902 702 (-10.) 10. (-10.) 10.
+							let fen = Graph.create_fenetre (Graph.length_x + 2) (Graph.length_y + 2) !Graph.min_abs !Graph.max_abs !Graph.min_ord !Graph.max_ord
 							in
 							let tab_x = Graph.decoupe_intervalle fen.abs !Graph.nombre_points
 							in
@@ -88,9 +88,9 @@ let main =
 			      			in
 			      			let zip_tab = ref (Graph.zip tab_x !map_tab_y)
 			      			in
-			      			Graph.create_center_line 902 702;
+			      			Graph.draw_center_lines_graph (Graph.length_x + 2) (Graph.length_y + 2) !Graph.min_abs !Graph.max_abs !Graph.min_ord !Graph.max_ord;
 							Graph.trace (Graph.en_tableau_pixel fen !zip_tab) Graphics.blue;
-							Graph.create_line_graph 902 702;
+							Graph.draw_frame_graph (Graph.length_x + 2) (Graph.length_y + 2);
 							Graph.print_fct !fct_formel;
 							let e = ref (Graphics.wait_next_event [Graphics.Key_pressed])
 							in
@@ -108,9 +108,9 @@ let main =
 													fct_formel := Function.simplify !fct_formel;
 													map_tab_y := Graph.map !fct_formel tab_y;
 													zip_tab := Graph.zip tab_x !map_tab_y;
-													Graph.create_center_line 902 702;
+													Graph.draw_center_lines_graph (Graph.length_x + 2) (Graph.length_y + 2) !Graph.min_abs !Graph.max_abs !Graph.min_ord !Graph.max_ord;
 													Graph.trace (Graph.en_tableau_pixel fen !zip_tab) Graphics.red;
-													Graph.create_line_graph 902 702;
+													Graph.draw_frame_graph (Graph.length_x + 2) (Graph.length_y + 2);
 													Graph.print_fct !fct_formel;
 													e := Graphics.wait_next_event [Graphics.Key_pressed]
 												end
@@ -119,8 +119,9 @@ let main =
 													fct_formel := Function.integrate !fct_formel "x";
 													map_tab_y := Graph.map !fct_formel tab_y;
 													zip_tab := Graph.zip tab_x !map_tab_y;
+													Graph.draw_center_lines_graph (Graph.length_x + 2) (Graph.length_y + 2) !Graph.min_abs !Graph.max_abs !Graph.min_ord !Graph.max_ord;
 													Graph.trace (Graph.en_tableau_pixel fen !zip_tab) Graphics.green;
-													Graph.create_line_graph 902 702;
+													Graph.draw_frame_graph (Graph.length_x + 2) (Graph.length_y + 2);
 													e := Graphics.wait_next_event [Graphics.Key_pressed]
 												end
 									| _ ->	e := Graphics.wait_next_event [Graphics.Key_pressed]

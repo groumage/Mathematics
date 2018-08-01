@@ -4,29 +4,16 @@ type ligne_polygonale = point array
 type fenetre = {mutable abs: intervalle; mutable ord: intervalle}
 
 let nombre_points = ref 200
+let length_x = 900
+let length_y = 700
 let decalage_x = 100
 let decalage_y = 100
-
-let create_line_graph dim_x dim_y =
-	Graphics.set_color Graphics.black;
-	Graphics.draw_rect 0 (decalage_y - 1) (dim_x - decalage_x) (dim_y - decalage_y)
-
-let create_center_line dim_x dim_y =
-	Graphics.set_color (Graphics.rgb 128 128 128);
-	Graphics.moveto 1 ((dim_y / 2) + (decalage_y / 2));
-	Graphics.lineto ((dim_x - decalage_x) - 1) ((dim_y / 2) + (decalage_y / 2));
-	Graphics.moveto ((dim_x / 2) - (decalage_x / 2)) (decalage_y - 1);
-	Graphics.lineto ((dim_x / 2) - (decalage_x / 2)) (dim_y - 2)
-
-let create_fenetre dim_x dim_y x1 x2 y1 y2 =
-	let param = " " ^ string_of_int dim_x ^ "x" ^ string_of_int dim_y in
-	Graphics.open_graph param;
-	Graphics.set_window_title "(Gui)^2 Graphics";
-	create_line_graph dim_x dim_y;
-	create_center_line dim_x dim_y;
-	let i1 = {a = x1; b = x2} in
-	let i2 = {a = y1; b = y2} in
-	{abs = i1; ord = i2}
+let longueur_repere_visu = 3
+let gray = Graphics.rgb 128 128 128
+let max_abs = ref 10.
+let min_abs = ref (-15.)
+let max_ord = ref 10.
+let min_ord = ref (-10.)
 
 let decoupe_intervalle i n =
 	let tab = Array.make (n+1) 0. in
@@ -35,6 +22,44 @@ let decoupe_intervalle i n =
 		tab.(j) <- i.a +. float_of_int j *. pas;
 	done;
 tab
+
+let longueur i =
+	i.b -. i.a
+
+let draw_frame_graph dim_x dim_y =
+	Graphics.set_color Graphics.black;
+	Graphics.draw_rect 0 (decalage_y - 1) (dim_x - decalage_x) (dim_y - decalage_y)
+
+let draw_center_lines_graph dim_x dim_y x1 x2 y1 y2 =
+	Graphics.set_color gray;
+	Graphics.moveto 1 ((dim_y / 2) + (decalage_y / 2));
+	Graphics.lineto ((dim_x - decalage_x) - 1) ((dim_y / 2) + (decalage_y / 2));
+	Graphics.moveto ((dim_x / 2) - (decalage_x / 2)) (decalage_y - 1);
+	Graphics.lineto ((dim_x / 2) - (decalage_x / 2)) (dim_y - 2);
+	let longueur_abscisse = dim_x - 2 - decalage_x in
+	let longueur_ordonnee = dim_y - 2 - decalage_y in
+	let nb_traits_abs = int_of_float (x2 -. x1) in
+	let nb_traits_ord = int_of_float (y2 -. y1) in
+	let pas_abs = longueur_abscisse / nb_traits_abs in
+	let pas_ord = longueur_ordonnee / nb_traits_ord in
+	for i = 1 to nb_traits_ord - 1 do
+		for j = 1 to nb_traits_abs - 1 do
+			Graphics.moveto (1 + j * pas_abs) (dim_y - (1 + i * pas_ord - longueur_repere_visu));
+			Graphics.lineto (1 + j * pas_abs) (dim_y - (1 + i * pas_ord + longueur_repere_visu));
+			Graphics.moveto (1 + j * pas_abs - longueur_repere_visu) (dim_y - (1 + i * pas_ord));
+			Graphics.lineto (1 + j * pas_abs + longueur_repere_visu) (dim_y - (1 + i * pas_ord))
+		done
+	done
+
+let create_fenetre dim_x dim_y x1 x2 y1 y2 =
+	let param = " " ^ string_of_int dim_x ^ "x" ^ string_of_int dim_y in
+	Graphics.open_graph param;
+	Graphics.set_window_title "(Gui)^2 Graphics";
+	draw_frame_graph dim_x dim_y;
+	draw_center_lines_graph dim_x dim_y x1 x2 y1 y2;
+	let i1 = {a = x1; b = x2} in
+	let i2 = {a = y1; b = y2} in
+	{abs = i1; ord = i2}
 	
 let map f t =
 	let tab = Array.make (Array.length t) 0. in
@@ -63,17 +88,14 @@ let trace t c =
 		Graphics.lineto x y
 	done;
 	Graphics.set_color Graphics.white;
-	Graphics.fill_rect 0 0 902 99
+	Graphics.fill_rect 0 0 902 (decalage_y - 1)
 
 let print_fct f =
 	Graphics.set_color Graphics.black;
 	let string_f = Function.string_fct f in
 	let (x_text, y_text) = Graphics.text_size string_f in
-	Graphics.moveto 5 (decalage_x - y_text - 5);
+	Graphics.moveto 5 (decalage_y - y_text - 5);
 	Graphics.draw_string ("f(x) = " ^ string_f)
-
-let longueur i =
-	i.b -. i.a
 
 let proportion i x =
 	(x -. i.a) /. longueur i
