@@ -219,11 +219,11 @@ let rec free_variables_present f x =
 		| Add (f, g)
 		| Sub (f, g)
 		| Mul (f, g)
+		| Puis (f, g) 
 		| Div (f, g) -> free_variables_present f x || free_variables_present g x
 		| Ln f
 		| Cos f
 		| Sin f
-		| Puis (_, f)
 		| Sqrt f
 		| Exp f -> free_variables_present f x
 

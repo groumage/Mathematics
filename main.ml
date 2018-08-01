@@ -11,7 +11,9 @@ let main =
   					print_string "MATRIX CALCULATOR\n\n";
   					let nb_lines = string_of_int (Matrix.nb_lines matrix)
   					in
-  					let nb_columns = string_of_int (Matrix.nb_columns matrix) in
+  					let nb_columns = string_of_int (Matrix.nb_columns matrix)
+  					in
+  					Graph.create_matrix matrix Graph.length_x_matrix Graph.length_y_matrix;
   					print_string ("Dimensions:\n" ^ nb_lines ^ "x" ^ nb_columns);
 					print_string "\n\n";
 					print_string "Matrix:\n";
@@ -60,7 +62,9 @@ let main =
 					Matrix.print_matrix (Matrix.mult_matrix matrix1 matrix2);
 					print_string "\n";
 					choice
-			| 3 -> 	let _ = Sys.command "clear" in
+			| 3 -> 	let _ = Sys.command "clear"
+					in
+					print_string "GRAPHICS\n\n";
 					print_string "Enter the function:\n";
 					print_endline "f(x) = ";
 					let lexbuf = Lexing.from_channel stdin
@@ -78,7 +82,7 @@ let main =
 						end
 					else
 						begin
-							let fen = Graph.create_fenetre (Graph.length_x + 2) (Graph.length_y + 2) !Graph.min_abs !Graph.max_abs !Graph.min_ord !Graph.max_ord
+							let fen = Graph.create_graph (Graph.length_x + 2) (Graph.length_y + 2) !Graph.min_abs !Graph.max_abs !Graph.min_ord !Graph.max_ord
 							in
 							let tab_x = Graph.decoupe_intervalle fen.abs !Graph.nombre_points
 							in

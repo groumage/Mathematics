@@ -6,14 +6,16 @@ type fenetre = {mutable abs: intervalle; mutable ord: intervalle}
 let nombre_points = ref 200
 let length_x = 900
 let length_y = 700
+let length_x_matrix = 400
+let length_y_matrix = 400
 let decalage_x = 100
 let decalage_y = 100
 let longueur_repere_visu = 3
 let gray = Graphics.rgb 128 128 128
-let max_abs = ref 20.
-let min_abs = ref (-20.)
-let max_ord = ref 20.
-let min_ord = ref (-20.)
+let max_abs = ref 15.
+let min_abs = ref (-5.)
+let max_ord = ref 15.
+let min_ord = ref (-5.)
 
 let decoupe_intervalle i n =
 	let tab = Array.make (n+1) 0. in
@@ -50,8 +52,8 @@ let draw_center_lines_graph dim_x dim_y x1 x2 y1 y2 =
 	Graphics.moveto 0 (dim_y - ((int_of_float (Util.abs_float y2)) * pas_ord + 1));
 	Graphics.lineto (dim_x - decalage_x) (dim_y - ((int_of_float (Util.abs_float y2)) * pas_ord + 1))
 	end;
-	for i = 1 to nb_traits_ord - 1 do
-		for j = 1 to nb_traits_abs - 1 do
+	for i = 0 to nb_traits_ord do
+		for j = 0 to nb_traits_abs do
 			Graphics.moveto (1 + j * pas_abs) (dim_y - (1 + i * pas_ord - longueur_repere_visu));
 			Graphics.lineto (1 + j * pas_abs) (dim_y - (1 + i * pas_ord + longueur_repere_visu));
 			Graphics.moveto (1 + j * pas_abs - longueur_repere_visu) (dim_y - (1 + i * pas_ord));
@@ -59,15 +61,30 @@ let draw_center_lines_graph dim_x dim_y x1 x2 y1 y2 =
 		done
 	done
 
-let create_fenetre dim_x dim_y x1 x2 y1 y2 =
+let create_graph dim_x dim_y x1 x2 y1 y2 =
 	let param = " " ^ string_of_int dim_x ^ "x" ^ string_of_int dim_y in
 	Graphics.open_graph param;
-	Graphics.set_window_title "(Gui)^2 Graphics";
+	Graphics.set_window_title "Mathemataume Graphics";
 	draw_frame_graph dim_x dim_y;
 	draw_center_lines_graph dim_x dim_y x1 x2 y1 y2;
 	let i1 = {a = x1; b = x2} in
 	let i2 = {a = y1; b = y2} in
 	{abs = i1; ord = i2}
+
+let create_matrix m dim_x dim_y =
+	let param = " " ^ string_of_int dim_x ^ "x" ^ string_of_int dim_y in
+	Graphics.open_graph param;
+	Graphics.set_window_title "Mathemataume Matrix";
+	let n = Matrix.nb_lines m in
+	let mem_pos_y = ref (Graphics.size_y() - 3) in
+	let str_line = ref "" in
+	for i = 0 to n-1 do
+		str_line := Matrix.str_matrix_line m i;
+		let (x_matrix, y_matrix) = Graphics.text_size !str_line in
+		mem_pos_y := !mem_pos_y - y_matrix - 2;
+		Graphics.moveto 5 !mem_pos_y;
+		Graphics.draw_string !str_line
+	done
 	
 let map f t =
 	let tab = Array.make (Array.length t) 0. in
@@ -96,7 +113,8 @@ let trace t c =
 		Graphics.lineto x y
 	done;
 	Graphics.set_color Graphics.white;
-	Graphics.fill_rect 0 0 (Graphics.size_x()) (decalage_y - 1)
+	Graphics.fill_rect 0 0 (Graphics.size_x()) (decalage_y - 1);
+	Graphics.fill_rect (Graphics.size_x() - decalage_x) 0 decalage_x (Graphics.size_y())
 
 let print_fct f =
 	Graphics.set_color Graphics.black;

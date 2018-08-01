@@ -49,6 +49,14 @@ let integers n =
 	fill_matrix m (function i, j -> float_of_int(j+1));
 m
 
+let str_matrix_line m i =
+	let str = ref "" in
+	let p = nb_columns m in
+	for j = 0 to (p-1) do
+		str := !str ^ " " ^ string_of_float m.(i).(j)
+	done;
+!str
+
 (* Return a string format of the matrix m *)
 let str_of_matrix m =
 	let str = ref "" in
