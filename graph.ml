@@ -12,10 +12,10 @@ let decalage_x = 100
 let decalage_y = 100
 let longueur_repere_visu = 3
 let gray = Graphics.rgb 128 128 128
-let max_abs = ref 15.
-let min_abs = ref (-5.)
-let max_ord = ref 15.
-let min_ord = ref (-5.)
+let max_abs = ref 10.
+let min_abs = ref (-10.)
+let max_ord = ref 10.
+let min_ord = ref (-10.)
 
 let decoupe_intervalle i n =
 	let tab = Array.make (n+1) 0. in

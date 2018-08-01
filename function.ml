@@ -37,7 +37,7 @@ let rec string_fct f =
 							then string_fct f
 							else*) "(" ^ string_fct f ^ " * " ^ string_fct g ^ ")"
 						(*end*)
-		| Div (f, g) -> string_fct f ^ " / " ^ string_fct g
+		| Div (f, g) -> "(" ^ string_fct f ^ " / " ^ string_fct g ^ ")"
 		| Add (f, g) -> "(" ^ string_fct f ^ " + " ^ string_fct g ^ ")"
 		| Sub (f, g) -> string_fct f ^ " - " ^ string_fct g
 		| Ln f -> "ln (" ^ string_fct f ^ ")"
@@ -67,8 +67,42 @@ let get_var v =
 		| Var v -> v
 		| _ -> failwith "get_var: a var is expected"
 
-let rec simplify f =
-	let rec is_zero f =
+let rec simplify e =
+	let e' = simp e in
+	if e' = e then e' else simplify e'
+	and simp f = 
+	print_string (string_fct f);
+	print_string "\n";
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (Float 0., f) -> simp f
+			| Add (f, Float 0.) -> simp f
+			| Add (f, g) when f = g -> simp (Mul (Float 2., f))
+			| Add (f, g) -> Add (simp f, simp g)
+			| Sub (Float 0., f) -> simp (Mul (Float (-1.), f))
+			| Sub (f, Float 0.) -> simp f
+			| Sub (f, g) when f = g -> Float 0.
+			| Sub (f, g) -> Sub (simp f, simp g)
+			| Div (Float 0., f) -> Float 0.
+			| Div (f, Float 1.) -> simp f
+			| Div (f, g) when f = g -> Float 1.
+			| Div (f, g) -> Div (simp f, simp g)
+			| Mul (Float 1., f) -> simp f
+			| Mul (f, Float 1.) -> simp f
+			| Mul (Float 0., f) -> Float 0.
+			| Mul (f, Float 0.) -> Float 0.
+			| Mul (f, g) when f = g -> simp (Puis (f, Float 2.))
+			| Mul (Puis (f, g), h) when f = h -> Puis (simp f, simp (Add (g, Float 1.)))
+			| Mul (f, g) -> Mul (simp f, simp g)
+			| Puis (f, Float 0.) -> Float 1.
+			| Puis (Float 0., f) -> Float 0.
+			| Puis (f, Float 1.) -> simp f
+			| Puis (f, g) -> Puis (simp f, simp g)
+
+
+
+	(*let rec is_zero f =
 		match f with
 			| Float f when f = 0. -> true
 			| Float f -> false
@@ -160,8 +194,7 @@ let rec simplify f =
 		match f with
 			| Puis (Float f, g) -> Puis (Float f, simplify_op g)
 			| Puis (f, g) -> Puis (simplify_op f, simplify_op g)
-	in
-simplify_zero (simplify_op f)
+	in*)
 
 let rec deriv f x =
 	match f with
