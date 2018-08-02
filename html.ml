@@ -19,7 +19,29 @@ type arbre =
 
 type document_html = {nom: string; document: arbre}
 
-let fic = open_out "res.html";;
-output_string fic ("<html>" ^ string_of_float (5.5) ^ "</html>");;
-close_out fic;;
-let _ = Sys.command "firefox res.html";;
+let rec node_to_html n =
+	match n with
+		| [] -> ""
+		| h :: t -> (
+						match h with
+							| [] -> match b with
+										| Htlm -> "<html>\n</html>" 
+										| Title -> "<title></title>\n" 
+										| Head -> "<head>\n</head>" 
+										| Body -> "<hbody>\n</body>" 
+							| h :: t -> 
+					)
+
+and arbre_to_html tree =
+	match tree with
+		| Text t -> t
+		| Balise (b, a, t) -> node_to_html t		
+
+let init_arbre title =
+	let fic = open_out "res.html" in
+	let b4 = Balise (Body, [], [Text ("je suis le body")]) in
+	let b3 = Balise (Title, [], [Text (title), Text ("je suis le head")]) in
+	let b2 = Balise (Head, [], [b3]) in
+	let b1 = Balise (Html, [], []) in
+	output_string fic ("toto");
+	close_out fic
