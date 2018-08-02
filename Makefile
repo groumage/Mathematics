@@ -1,4 +1,4 @@
-SOURCES = util.ml matrix.ml function.ml graph.ml parser.mly lexer.mll main.ml
+SOURCES = util.ml matrix.ml function.ml graph.ml parser.mly lexer.mll main.ml html.ml
 
 EXEC = project.exe
 
