@@ -76,15 +76,48 @@ let create_matrix m dim_x dim_y =
 	Graphics.open_graph param;
 	Graphics.set_window_title "Mathemataume Matrix";
 	let n = Matrix.nb_lines m in
-	let mem_pos_y = ref (Graphics.size_y() - 3) in
+	let p = Matrix.nb_columns m in
+	let mem_pos_y = ref (Graphics.size_y()) in
+	let (x, y) = Graphics.text_size ("Dimensions : " ^ string_of_int n ^ "x" ^ string_of_int p) in
+	mem_pos_y := !mem_pos_y - y - 5;
+	Graphics.moveto 5 !mem_pos_y;
+	Graphics.draw_string ("Dimensions : " ^ string_of_int n ^ "x" ^ string_of_int p);
+	let (x, y) = Graphics.text_size "Matrix :" in
+	mem_pos_y := !mem_pos_y - y - 15;
+	Graphics.moveto 5 !mem_pos_y;
+	Graphics.draw_string "Matrix :";
 	let str_line = ref "" in
-	for i = 0 to n-1 do
+	for i = 0 to n - 1 do
 		str_line := Matrix.str_matrix_line m i;
-		let (x_matrix, y_matrix) = Graphics.text_size !str_line in
-		mem_pos_y := !mem_pos_y - y_matrix - 2;
+		let (x, y) = Graphics.text_size !str_line in
+		mem_pos_y := !mem_pos_y - y - 5;
 		Graphics.moveto 5 !mem_pos_y;
 		Graphics.draw_string !str_line
-	done
+	done;
+	let (x, y) = Graphics.text_size "Transpose :" in
+	mem_pos_y := !mem_pos_y - y - 15;
+	Graphics.moveto 5 !mem_pos_y;
+	Graphics.draw_string "Transpose :";
+	let transpose = Matrix.transpose (Matrix.copy_matrix m) in
+	let n = Matrix.nb_lines transpose in
+	str_line := "";
+	for i = 0 to n - 1 do
+		str_line := Matrix.str_matrix_line transpose i;
+		let (x, y) = Graphics.text_size !str_line in
+		mem_pos_y := !mem_pos_y - y - 5;
+		Graphics.moveto 5 !mem_pos_y;
+		Graphics.draw_string !str_line
+	done;
+	let determinant = Matrix.determinant m in
+	let (x, y) = Graphics.text_size ("Determinant :" ^ (string_of_float determinant)) in
+	mem_pos_y := !mem_pos_y - y - 15;
+	Graphics.moveto 5 !mem_pos_y;
+	Graphics.draw_string ("Determinant : " ^ string_of_float determinant);
+	let trace = Matrix.trace m in
+	let (x, y) = Graphics.text_size ("Trace :" ^ (string_of_float trace)) in
+	mem_pos_y := !mem_pos_y - y - 15;
+	Graphics.moveto 5 !mem_pos_y;
+	Graphics.draw_string ("Trace : " ^ string_of_float trace)
 	
 let map f t =
 	let tab = Array.make (Array.length t) 0. in

@@ -39,6 +39,10 @@ let rec simplify f =
 			| Add (Float 0., f) -> simp f
 			| Add (f, Float 0.) -> simp f
 			| Add (Float f1, Float f2) -> Float (f1 +. f2)
+			| Add (f, Mul (Float f1, g)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
+			| Add (f, Mul (g, Float f1)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
+			| Add (Mul (Float f1, f), g) when f = g -> simp (Mul (Float (f1 +. 1.), f))
+			| Add (Mul (f, Float f1), g) when f = g -> simp (Mul (Float (f1 +. 1.), f))
 			| Add (f, g) when f = g -> simp (Mul (Float 2., f))
 			| Add (f, g) -> Add (simp f, simp g)
 			| Sub (Float 0., f) -> simp (Mul (Float (-1.), f))
@@ -56,8 +60,8 @@ let rec simplify f =
 			| Mul (Float 0., f) -> Float 0.
 			| Mul (f, Float 0.) -> Float 0.
 			| Mul (Float f1, Float f2) -> Float (f1 *. f2)
-			| Mul (f, g) when f = g -> simp (Puis (simp f, Float 2.))
 			| Mul (Puis (f, g), h) when f = h -> Puis (simp f, simp (Add (g, Float 1.)))
+			| Mul (f, g) when f = g -> simp (Puis (simp f, Float 2.))
 			| Mul (f, g) -> Mul (simp f, simp g)
 			| Puis (f, Float 0.) -> Float 1.
 			| Puis (Float 0., f) -> Float 0.
@@ -67,7 +71,7 @@ let rec simplify f =
 			| Cos f -> Cos (simp f)
 			| Sin f -> Sin (simp f)
 			| Sqrt f -> Sqrt (simp f)
-			| Exp f -> (simp f)
+			| Exp f -> Exp (simp f)
 
 let rec deriv f x =
 	match f with
@@ -145,7 +149,7 @@ let cos e = Cos e
 let sin e = Sin e
 let var v = Var v
 let sqrt e = Sqrt e
-let exp e = Exp e
+let expo e = Exp e
 let lnp e = Ln e
 
 (*
