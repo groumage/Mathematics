@@ -134,6 +134,7 @@ let rec string_fct f =
 			| Sqrt f -> Sqrt (simp f)
 			| Exp f -> Exp (simp f)*)
 
+	(*List.filter ( fun f -> match f with Plus f -> (is_in (Minus(f)) l) == false | Minus f -> (is_in (Plus(f)) l ) == false) l*)
 let rec tree_to_list f i =
 	match (f, i) with
 		| (Add (f, g), _) -> tree_to_list f 0 @ tree_to_list g 0
@@ -154,7 +155,6 @@ let rec remove f l =
 		| h :: t -> h :: remove f t
 
 let rec filter l =
-	(*List.filter ( fun f -> match f with Plus f -> (is_in (Minus(f)) l) == false | Minus f -> (is_in (Plus(f)) l ) == false) l*)
 	match l with
 		| [] -> []
 		| (Plus f) :: t -> if is_in (Minus(f)) t then filter (remove (Minus(f)) t) else [Plus f] @ filter t
@@ -175,11 +175,23 @@ let rec simplify f =
 	then f_simplify 
 	else simplify f_simplify
 	and simp f = 
+		print_string (string_fct f);
+		print_string "\n";
 		match f with
 			| Float f -> Float f
 			| Var x -> Var x
+			(* 0 + x -> x *)
+			| Add (Float 0., f) -> simp f
+			(* x + 0 -> x *)
+			| Add (f, Float 0.) -> simp f
+			(* f1 + f2-> calcul (f1 + f2) *)
+			| Add (Float f1, Float f2) -> Float (f1 +. f2)
+			(* x + x -> 2 * x *)
+			| Add (f, g) when f = g -> (*print_string (string_fct f);print_string "\n"; print_string (string_fct g);print_string "\n\n";*) simp (Mul (Float 2., simp f))
 			| Add (f, g) -> list_to_tree (filter (tree_to_list (Add (f, g)) 0))
 			| Sub (f, g) -> list_to_tree (filter (tree_to_list (Sub (f, g)) 0))
+			| Mul (Float f1, f) -> Mul (Float f1, simp f)
+
 
 			(*
 			| Add (f, Mul (Float f1, g)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
