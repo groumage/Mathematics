@@ -12,6 +12,10 @@ type formel =
 	| Sqrt of formel
 	| Exp of formel
 
+type subtree =
+	| Plus of formel
+	| Minus of formel
+
 let rec string_fct f =
 	match f with
   		| Float f -> string_of_float f
@@ -27,7 +31,7 @@ let rec string_fct f =
 		| Sqrt f -> "sqrt (" ^ string_fct f ^ ")"
 		| Exp f -> "exp (" ^ string_fct f ^ ")"
 
-let rec simplify f =
+(*let rec simplify f =
 	let f_simplify = simp f in
 	if f_simplify = f 
 	then f_simplify 
@@ -37,6 +41,43 @@ let rec simplify f =
 			| Float f -> Float f
 			| Var x -> Var x
 			
+			(* 1 * x -> x *)
+			| Mul (Float 1., f) -> simp f
+			(* x * 1 -> x *)
+			| Mul (f, Float 1.) -> simp f
+			(* 0 * x -> 0 *)
+			| Mul (Float 0., f) -> Float 0.
+			(* x * 0 -> 0 *)
+			| Mul (f, Float 0.) -> Float 0.
+			(* f1 * f2 -> calcul (f1 * f2) *)
+			| Mul (Float f1, Float f2) -> Float (f1 *. f2)
+			
+			(* 0 / x -> 0 *)
+			| Div (Float 0., f) -> Float 0.
+			(* x / 1 -> x *)
+			| Div (f, Float 1.) -> simp f
+			(* f1 / f2 -> calcul (f1 / f2) *)
+			| Div (Float f1, Float f2) -> Float (f1 /. f2)
+			(* x / x -> 1 *)
+			| Div (f, g) when f = g -> Float 1.
+			
+			| Div (f, g) -> Div (simp f, simp g)
+			
+			(* x * x -> x ^ 2 *)
+			| Mul (f, g) when f = g -> simp (Puis (simp f, Float 2.))
+			(* x ^ a * x -> x ^ (a + 1) *)
+			| Mul (Puis (f, g), h) when f = h -> Puis (simp f, simp (Add (simp g, Float 1.)))
+			
+			(* (f1 * x) * f2 -> (f1 * f2) * x *)
+			| Mul (Mul (Float f1, f), Float f2) -> simp (Mul (Float (f1 *. f2), simp f))
+			(* f1 * (f2 * x) -> (f1 * f2) * x *)
+			| Mul (Float f1, Mul (Float f2, f)) -> simp (Mul (Float (f1 *. f2), simp f))
+			(* (x * f1) * f2 -> (f1 * f2) * x *)
+			| Mul (Mul (f, Float f1), Float f2) -> simp (Mul (Float (f1 *. f2), simp f))
+			(* f1 * (x * f2) -> (f1 * f2) * x *)
+			| Mul (Float f1, Mul (f, Float f2)) -> simp (Mul (Float (f1 *. f2), simp f))
+
+			| Mul (f, g) -> Mul (simp f, simp g)
 			(* 0 + x -> x *)
 			| Add (Float 0., f) -> simp f
 			(* x + 0 -> x *)
@@ -77,43 +118,6 @@ let rec simplify f =
 			
 			| Sub (f, g) -> Sub (simp f, simp g)
 
-			(* 0 / x -> 0 *)
-			| Div (Float 0., f) -> Float 0.
-			(* x / 1 -> x *)
-			| Div (f, Float 1.) -> simp f
-			(* f1 / f2 -> calcul (f1 / f2) *)
-			| Div (Float f1, Float f2) -> Float (f1 /. f2)
-			(* x / x -> 1 *)
-			| Div (f, g) when f = g -> Float 1.
-			
-			| Div (f, g) -> Div (simp f, simp g)
-			
-			(* 1 * x -> x *)
-			| Mul (Float 1., f) -> simp f
-			(* x * 1 -> x *)
-			| Mul (f, Float 1.) -> simp f
-			(* 0 * x -> 0 *)
-			| Mul (Float 0., f) -> Float 0.
-			(* x * 0 -> 0 *)
-			| Mul (f, Float 0.) -> Float 0.
-			(* f1 * f2 -> calcul (f1 * f2) *)
-			| Mul (Float f1, Float f2) -> Float (f1 *. f2)
-
-			(* x * x -> x ^ 2 *)
-			| Mul (f, g) when f = g -> simp (Puis (simp f, Float 2.))
-			(* x ^ a * x -> x ^ (a + 1) *)
-			| Mul (Puis (f, g), h) when f = h -> Puis (simp f, simp (Add (simp g, Float 1.)))
-			
-			(* (f1 * x) * f2 -> (f1 * f2) * x *)
-			| Mul (Mul (Float f1, f), Float f2) -> simp (Mul (Float (f1 *. f2), simp f))
-			(* f1 * (f2 * x) -> (f1 * f2) * x *)
-			| Mul (Float f1, Mul (Float f2, f)) -> simp (Mul (Float (f1 *. f2), simp f))
-			(* (x * f1) * f2 -> (f1 * f2) * x *)
-			| Mul (Mul (f, Float f1), Float f2) -> simp (Mul (Float (f1 *. f2), simp f))
-			(* f1 * (x * f2) -> (f1 * f2) * x *)
-			| Mul (Float f1, Mul (f, Float f2)) -> simp (Mul (Float (f1 *. f2), simp f))
-
-			| Mul (f, g) -> Mul (simp f, simp g)
 			
 			(* x ^ 0 -> 1 *)
 			| Puis (f, Float 0.) -> Float 1.
@@ -128,12 +132,89 @@ let rec simplify f =
 			| Cos f -> Cos (simp f)
 			| Sin f -> Sin (simp f)
 			| Sqrt f -> Sqrt (simp f)
-			| Exp f -> Exp (simp f)
+			| Exp f -> Exp (simp f)*)
 
-			(*| Add (f, Mul (Float f1, g)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
+let rec tree_to_list f i =
+	match (f, i) with
+		| (Add (f, g), _) -> tree_to_list f 0 @ tree_to_list g 0
+		| (Sub (f, g), _) -> tree_to_list f 0 @ tree_to_list g 1
+		| (f, 0) -> [Plus f]
+		| (f, 1) -> [Minus f]
+		| _ -> failwith "impossible"
+
+let rec is_in f l =
+	match l with
+    	| [] -> false
+    	| h :: t -> if h = f then true else is_in f t
+
+let rec remove f l =
+	match l with
+		| [] -> []
+		| h :: t when h = f -> t
+		| h :: t -> h :: remove f t
+
+let rec filter l =
+	(*List.filter ( fun f -> match f with Plus f -> (is_in (Minus(f)) l) == false | Minus f -> (is_in (Plus(f)) l ) == false) l*)
+	match l with
+		| [] -> []
+		| (Plus f) :: t -> if is_in (Minus(f)) t then filter (remove (Minus(f)) t) else [Plus f] @ filter t
+		| (Minus f) :: t -> if is_in (Plus(f)) t then filter (remove (Plus (f)) t) else [Minus f] @ filter t
+
+let rec list_to_tree l =
+	match l with
+		| [Plus f] -> f
+		| [Minus f] -> Mul (Float (-1.), f)
+		| (Plus f) :: t -> Add (f, list_to_tree t)
+		| (Minus f) :: t -> Sub (list_to_tree t, f)
+		| _ -> failwith "impossible"
+			
+
+let rec simplify f =
+	let f_simplify = simp f in
+	if f_simplify = f 
+	then f_simplify 
+	else simplify f_simplify
+	and simp f = 
+		match f with
+			| Float f -> Float f
+			| Var x -> Var x
+			| Add (f, g) -> list_to_tree (filter (tree_to_list (Add (f, g)) 0))
+			| Sub (f, g) -> list_to_tree (filter (tree_to_list (Sub (f, g)) 0))
+
+			(*
+			| Add (f, Mul (Float f1, g)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
 			| Add (f, Mul (g, Float f1)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
 			| Add (Mul (Float f1, f), g) when f = g -> simp (Mul (Float (f1 +. 1.), f))
 			| Add (Mul (f, Float f1), g) when f = g -> simp (Mul (Float (f1 +. 1.), f))*)
+
+(*let rec sub_tree_list f i =
+	match (f,i) with
+		| (f, 0) -> [Plus f]
+		| (f, 1) -> [Minus f]
+		| (Add (f, g), _) -> (sub_tree_list f 0) @ (sub_tree_list f 0)
+		| (Sub (f, g), _) -> (sub_tree_list f 1) @ (sub_tree_list f 1)
+		| _ -> failwith "error"
+
+let rec is_in f l =
+	match l with
+		| [] -> false
+		| h :: _ when h = f -> true
+		| h :: t -> is_in f t
+
+let rec reduce_list_subtree l =
+	match l with
+		| [] -> []
+		| h :: t -> (
+					match h with
+						| Plus f -> if is_in (Minus f) l 
+									then reduce_list_subtree (List.filter (is_in (Plus f) == false && is_in (Minus f) == false) l) 
+									else reduce_list_subtree t
+						| Minus f -> if is_in (Plus f) l 
+									then reduce_list_subtree (List.filter (is_in (Plus f) == false && is_in (Minus f) == false) l) 
+									else reduce_list_subtree t
+					)
+	*)
+
 let rec deriv f x =
 	match f with
   		| Float f -> Float 0.
