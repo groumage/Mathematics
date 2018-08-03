@@ -19,7 +19,7 @@ type arbre =
 
 type document_html = {nom: string; document: arbre}
 
-let rec node_to_html n =
+(*let rec node_to_html n =
 	match n with
 		| [] -> ""
 		| h :: t -> (
@@ -44,4 +44,4 @@ let init_arbre title =
 	let b2 = Balise (Head, [], [b3]) in
 	let b1 = Balise (Html, [], []) in
 	output_string fic ("toto");
-	close_out fic
+	close_out fic*)
