@@ -146,6 +146,6 @@ let main =
 		print_string "3. Graphic\n";
 		print_string "4. Function calcualtor\n";
 		print_string "5. Exit\n";
-		print_int (List.length (Function.filter ([Plus (Var "x"); Minus (Var "x"); Plus (Var "x")])));
+		(*print_int (List.length (Function.filter ([Plus (Var "x"); Minus (Var "x"); Plus (Var "x")])));*)
 		res := loop (read_int ())
 	done
