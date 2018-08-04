@@ -158,8 +158,8 @@ let rec remove f l =
 let rec remove_all f l =
 	match l with
 		| [] -> []
-		| h :: t when h = f -> remove f t
-		| h :: t -> remove f t
+		| h :: t when h = f -> remove_all f t
+		| h :: t -> h :: remove_all f t
 
 let rec count f l =
 	match l with
@@ -198,10 +198,8 @@ let rec simplify f =
 		match f with
 			| Float f -> Float f
 			| Var x -> Var x
+
 			(* 0 + x -> x *)
-
-			| Mul (f, g) -> Mul (simp f, simp g)
-
 			| Add (Float 0., f) -> simp f
 			(* x + 0 -> x *)
 			| Add (f, Float 0.) -> simp f
@@ -210,6 +208,7 @@ let rec simplify f =
 
 			| Add (f, g) -> list_to_tree (factorise (filter (tree_to_list (Add (f, g)) 0)))
 			| Sub (f, g) -> list_to_tree (factorise (filter (tree_to_list (Sub (f, g)) 0)))
+			| Mul (f, g) -> Mul (simp f, simp g)
 
 			(*
 			| Add (f, Mul (Float f1, g)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
