@@ -208,7 +208,11 @@ let rec simplify f =
 
 			| Add (f, g) -> list_to_tree (factorise (filter (tree_to_list (Add (f, g)) 0)))
 			| Sub (f, g) -> list_to_tree (factorise (filter (tree_to_list (Sub (f, g)) 0)))
-			| Mul (f, g) -> Mul (simp f, simp g)
+			| Mul (Float f1, Float f2) -> Float (f1 *. f2)
+			| Mul (Float f1, Var x) -> Mul (Float f1, Var x)
+			| Mul (Var x, Float f1) -> Mul (Float f1, Var x)
+			| Mul (Var x, Var y) when x = y -> Puis (Var x, Float 2.)
+			| Mul (f, g) -> simp (Mul (simp f, simp g))
 
 			(*
 			| Add (f, Mul (Float f1, g)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
