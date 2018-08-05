@@ -30,7 +30,7 @@ let rec string_fct f =
 		| Ln f -> "ln (" ^ string_fct f ^ ")"
 		| Cos f -> "cos (" ^ string_fct f ^ ")"
 		| Sin f -> "sin (" ^ string_fct f ^ ")"
-		| Puis (f, g) -> "(" ^ string_fct f ^ " ^ (" ^ string_fct g ^ ")) "
+		| Puis (f, g) -> "((" ^ string_fct f ^ ") ^ (" ^ string_fct g ^ ")) "
 		| Sqrt f -> "sqrt (" ^ string_fct f ^ ")"
 		| Exp f -> "exp (" ^ string_fct f ^ ")"
 
@@ -142,12 +142,19 @@ let rec tree_to_list f i =
 	match (f, i) with
 		| (Add (f, g), _) -> tree_to_list f 0 @ tree_to_list g 0
 		| (Sub (f, g), _) -> tree_to_list f 0 @ tree_to_list g 1
-		| (Mul (f, g), _) -> tree_to_list f 2 @ tree_to_list g 2
-		| (Div (f, g), _) -> tree_to_list f 2 @ tree_to_list g 3
 		| (f, 0) -> [Plus f]
 		| (f, 1) -> [Minus f]
-		| (f, 2) -> [Times (1, f)]
-		| (f, 3) -> [Division (1, f)]
+		(*| (Mul (f, g), _) -> tree_to_list f 2 @ tree_to_list g 2
+		| (Div (f, g), _) -> tree_to_list f 2 @ tree_to_list g 3*)
+		(*| (f, 2) -> [Times (1, f)]
+		| (f, 3) -> [Division (1, f)]*)
+
+let rec tree_to_list_2 f i =
+	match (f, i) with
+		| (Mul (f, g), _) -> tree_to_list_2 f 0 @ tree_to_list_2 g 0
+		| (Div (f, g), _) -> tree_to_list_2 f 0 @ tree_to_list_2 g 1
+		| (f, 0) -> [Times (1, f)]
+		| (f, 1) -> [Division (1, f)]
 
 let rec is_in f l =
 	match l with
@@ -184,6 +191,11 @@ let rec count f l =
 		| h :: t when h = f -> 1 + count f t
 		| h :: t -> count f t
 
+let is_plus t =
+	match t with
+		| (Plus f) -> true
+		| _ -> false
+
 let rec filter l =
 	match l with
 		| [] -> []
@@ -198,11 +210,23 @@ let rec list_to_tree l =
 		| [Plus f] -> f
 		| [Minus f] -> Mul (Float (-1.), f)
 		| [Times (i, f)] -> Puis (f, Float (float_of_int i))
-		| [Division (i, f)] -> Div (Float 1., Mul (Float (float_of_int i), f))
 		| (Plus f) :: t -> Add (f, list_to_tree t)
 		| (Minus f) :: t -> Sub (list_to_tree t, f)
-		| (Times (i, f)) :: t -> Add (Puis (f, Float (float_of_int i)), list_to_tree t)
-		| (Division (i, f)) :: t -> Add (Div (Float 1., Mul (Float (float_of_int i), f)), list_to_tree t)
+		(*| [Division (i, f)] -> Div (Float 1., Mul (Float (float_of_int i), f))*)
+		(*| (Times (i, f)) :: [Times (j,g)] -> Mul (Puis (f, Float (float_of_int i)), list_to_tree [Times (j, g)])
+		| (Times (i, f)) :: [Plus g] -> Add (Puis (f, Float (float_of_int i)), list_to_tree [Plus g])*)
+		(*| (Times (i, f)) :: t -> match t with
+									| (Plus g) :: t -> Add (Puis (f, Float (float_of_int i)), list_to_tree ((Plus g) :: t))
+									| (Times (j, g)) :: t -> Mul (Puis (f, Float (float_of_int i)), list_to_tree ((Times (j, g)) :: t))
+		| (Division (i, f)) :: t -> Mul (Div (Float 1., Mul (Float (float_of_int i), f)), list_to_tree t)*)
+
+let rec list_to_tree_2 l =
+	match l with
+		| [] -> Float 1.
+		| [Times (i, f)] -> Puis (f, Float (float_of_int i))
+		| [Division (i, f)] -> Div (Float (float_of_int i), f)
+		| (Times (i, f)) :: t -> Mul (Puis (f, Float (float_of_int i)), list_to_tree t)
+		| (Division (i, f)) :: t -> Mul (Div (Float (float_of_int i), f), list_to_tree t)
 
 let rec simplify f =
 	let f_simplify = simp f in
@@ -232,9 +256,9 @@ let rec simplify f =
 			(* x * f1 -> f1 * x *)
 			| Mul (f, Float f1) -> Mul (Float f1, simp f)
 			(* x ^ f * x -> x ^ (f + 1) *)
-			| Mul (Puis (f, g), i) when f = i -> Puis (f, simp (Add (g, Float 1.)))
+			(*| Mul (Puis (f, g), i) when f = i -> Puis (f, simp (Add (g, Float 1.)))
 			(* f * g when f = g -> f ^ 2 *)
-			| Mul (f, g) when f = g -> Puis (simp f, Float 2.)
+			| Mul (f, g) when f = g -> Puis (simp f, Float 2.)*)
 			
 			(* 0 / x -> 0 *)
 			| Div (Float 0., f) -> Float 0.
@@ -248,9 +272,12 @@ let rec simplify f =
 			| Puis (f, Float 1.) -> simp f
 
 			| Puis (f, g) -> Puis (simp f, simp g)
-			
-			| Mul (f, g) -> list_to_tree (factorise (filter (tree_to_list (Mul (f, g)) 0)))
+
+			| Mul (f, g) -> list_to_tree_2 (factorise (filter (tree_to_list_2 (Mul (f, g)) 0)))
 			| Div (f, g) -> Div (simp f, simp g)
+			
+			(*| Mul (f, g) -> list_to_tree (factorise (filter (tree_to_list (Mul (f, g)) 0)))
+			| Div (f, g) -> list_to_tree (factorise (filter (tree_to_list (Div (f, g)) 0)))*)
 			(*| Div (Puis (f, g), h) when f = h -> Puis (f, simp (Sub (g, Float 1.)))
 			| Div (f, Puis (g, h)) when f = h -> Puis (f, simp (Sub (g, Float 1.)))*)
 
