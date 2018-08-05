@@ -16,6 +16,7 @@ type subtree =
 	| Plus of formel
 	| Minus of formel
 	| Times of int * formel
+	(*| Division of int * formel*)
 
 let rec string_fct f =
 	match f with
@@ -23,8 +24,8 @@ let rec string_fct f =
   		| Var v -> v
 		| Mul (f, g) -> "(" ^ string_fct f ^ " * " ^ string_fct g ^ ")"
 		| Div (f, g) -> "(" ^ string_fct f ^ " / " ^ string_fct g ^ ")"
-		| Add (f, g) -> string_fct f ^ " + " ^ string_fct g
-		| Sub (f, g) -> string_fct f ^ " - " ^ string_fct g
+		| Add (f, g) -> "(" ^ string_fct f ^ " + " ^ string_fct g ^ ")"
+		| Sub (f, g) -> "(" ^ string_fct f ^ " - " ^ string_fct g ^ ")"
 		| Ln f -> "ln (" ^ string_fct f ^ ")"
 		| Cos f -> "cos (" ^ string_fct f ^ ")"
 		| Sin f -> "sin (" ^ string_fct f ^ ")"
@@ -140,9 +141,12 @@ let rec tree_to_list f i =
 	match (f, i) with
 		| (Add (f, g), _) -> tree_to_list f 0 @ tree_to_list g 0
 		| (Sub (f, g), _) -> tree_to_list f 0 @ tree_to_list g 1
+		(*| (Mul (f, g), _) -> tree_to_list f 2 @ tree_to_list g 2
+		| (Div (f, g), _) -> tree_to_list f 2 @ tree_to_list g 3*)
 		| (f, 0) -> [Plus f]
 		| (f, 1) -> [Minus f]
-		| _ -> failwith "tree_to_list: the operator is not a formal function, Add or Sub"
+		(*| (f, 2) -> [Times (1, f)]
+		| (f, 3) -> [Division (1, f)]*)
 
 let rec is_in f l =
 	match l with
@@ -170,9 +174,10 @@ let rec count f l =
 let rec filter l =
 	match l with
 		| [] -> []
-		| (Plus f) :: t -> if is_in (Minus(f)) t then filter (remove (Minus(f)) t) else [Plus f] @ filter t
-		| (Minus f) :: t -> if is_in (Plus(f)) t then filter (remove (Plus (f)) t) else [Minus f] @ filter t
-		| (Times(_, _)) :: t -> failwith "filter: Times is present"
+		| (Plus f) :: t -> if is_in (Minus (f)) t then filter (remove (Minus (f)) t) else [Plus f] @ filter t
+		| (Minus f) :: t -> if is_in (Plus (f)) t then filter (remove (Plus (f)) t) else [Minus f] @ filter t
+		(*| (Times (1, f)) :: t -> if is_in (Division (1, f)) t then filter (remove (Division (1, f)) t) else [Times (1, f)] @ filter t
+		| (Division (1, f)) :: t -> if is_in (Times (1, f)) t then filter (remove (Times (1, f)) t) else [Division (1, f)] @ filter t*)
 
 let rec list_to_tree l =
 	match l with
@@ -180,9 +185,11 @@ let rec list_to_tree l =
 		| [Plus f] -> f
 		| [Minus f] -> Mul (Float (-1.), f)
 		| [Times (i, f)] -> Mul (Float (float_of_int i), f)
+		(*| [Division (i, f)] -> Div (Float 1., Mul (Float (float_of_int i), f))*)
 		| (Plus f) :: t -> Add (f, list_to_tree t)
 		| (Minus f) :: t -> Sub (list_to_tree t, f)
 		| (Times (i, f)) :: t -> Add (Mul (Float (float_of_int i), f), list_to_tree t)
+		(*| (Division (i, f)) :: t -> Add (Div (Float 1., Mul (Float (float_of_int i), f)), list_to_tree t)*)
 
 let rec simplify f =
 	let f_simplify = simp f in
@@ -216,10 +223,6 @@ let rec simplify f =
 			(* f * g when f = g -> f ^ 2 *)
 			| Mul (f, g) when f = g -> Puis (simp f, Float 2.)
 			
-			| Mul (f, g) -> Mul (simp f, simp g)
-
-			| Puis (f, g) -> Puis (simp f, simp g)
-
 			(* 0 / x -> 0 *)
 			| Div (Float 0., f) -> Float 0.
 			(* x / 1 -> x *)
@@ -228,7 +231,12 @@ let rec simplify f =
 			| Div (Float f1, Float f2) -> Float (f1 /. f2)
 			(* x / x -> 1 *)
 			| Div (f, g) when f = g -> Float 1.
+
+			| Puis (f, Float 1.) -> simp f
+			| Puis (f, g) -> Puis (simp f, simp g)
 			
+			| Mul (f, g) -> Mul (simp f, simp g)
+			| Div (Puis (f, g), h) when f = h -> Puis (f, simp (Sub (g, Float 1.)))
 			| Div (f, g) -> Div (simp f, simp g)
 
 			| Cos f -> Cos (simp f)
@@ -241,7 +249,8 @@ let rec simplify f =
 		| [] -> []
 		| (Plus f) :: t -> let cpt = (1 + count (Plus(f)) t) in if cpt > 1 then [Times (cpt, simp f)] @ factorise (remove_all (Plus(f)) t) else [Plus (simp f)] @ factorise t
 		| (Minus f) :: t -> let cpt = (1 + count (Minus(f)) t) in if cpt > 1 then [Times (-cpt, simp f)] @ factorise (remove_all (Minus(f)) t) else [Minus (simp f)] @ factorise t
-		| (Times(_, _)) :: t -> failwith "filter: Times is present"
+		(*| (Times (i, f)) :: t -> let cpt = (1 + count (Times (1, f)) t) in if cpt > 0 then [Times (cpt, simp f)] @ factorise (remove_all (Times (1, f)) t) else [Times (i, simp f)] @ factorise t
+		| (Division (i, f)) :: t -> let cpt = (1 + count (Division (1, f)) t) in if cpt > 0 then [Division (cpt, simp f)] @ factorise (remove_all (Division (1, f)) t) else [Division (i, simp f)] @ factorise t*)
 
 let rec deriv f x =
 	match f with
