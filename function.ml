@@ -23,12 +23,12 @@ let rec string_fct f =
   		| Var v -> v
 		| Mul (f, g) -> "(" ^ string_fct f ^ " * " ^ string_fct g ^ ")"
 		| Div (f, g) -> "(" ^ string_fct f ^ " / " ^ string_fct g ^ ")"
-		| Add (f, g) -> "(" ^ string_fct f ^ " + " ^ string_fct g ^ ")"
+		| Add (f, g) -> string_fct f ^ " + " ^ string_fct g
 		| Sub (f, g) -> string_fct f ^ " - " ^ string_fct g
 		| Ln f -> "ln (" ^ string_fct f ^ ")"
 		| Cos f -> "cos (" ^ string_fct f ^ ")"
 		| Sin f -> "sin (" ^ string_fct f ^ ")"
-		| Puis (f, g) -> "(" ^ string_fct f ^ " ^ (" ^ string_fct g ^ "))"
+		| Puis (f, g) -> "(" ^ string_fct f ^ " ^ (" ^ string_fct g ^ ")) "
 		| Sqrt f -> "sqrt (" ^ string_fct f ^ ")"
 		| Exp f -> "exp (" ^ string_fct f ^ ")"
 
@@ -142,7 +142,7 @@ let rec tree_to_list f i =
 		| (Sub (f, g), _) -> tree_to_list f 0 @ tree_to_list g 1
 		| (f, 0) -> [Plus f]
 		| (f, 1) -> [Minus f]
-		| _ -> failwith "impossible 1"
+		| _ -> failwith "tree_to_list: the operator is not a formal function, Add or Sub"
 
 let rec is_in f l =
 	match l with
@@ -167,17 +167,12 @@ let rec count f l =
 		| h :: t when h = f -> 1 + count f t
 		| h :: t -> count f t
 
-let rec factorise l =
-	match l with
-		| [] -> []
-		| (Plus f) :: t -> let cpt = (1 + count (Plus(f)) t) in if cpt > 1 then [Times (cpt, f)] @ factorise (remove_all (Plus(f)) t) else [Plus f] @ factorise t
-		| (Minus f) :: t -> let cpt = (1 + count (Minus(f)) t) in if cpt > 1 then [Times (-cpt, f)] @ factorise (remove_all (Minus(f)) t) else [Minus f] @ factorise t
-
 let rec filter l =
 	match l with
 		| [] -> []
 		| (Plus f) :: t -> if is_in (Minus(f)) t then filter (remove (Minus(f)) t) else [Plus f] @ filter t
 		| (Minus f) :: t -> if is_in (Plus(f)) t then filter (remove (Plus (f)) t) else [Minus f] @ filter t
+		| (Times(_, _)) :: t -> failwith "filter: Times is present"
 
 let rec list_to_tree l =
 	match l with
@@ -206,47 +201,47 @@ let rec simplify f =
 			(* f1 + f2-> calcul (f1 + f2) *)
 			| Add (Float f1, Float f2) -> Float (f1 +. f2)
 
+			(* the commutative property of addition rules e.g. Plus (f), Minus (g), Minus (h) when f = h -> Minus (g) *)
 			| Add (f, g) -> list_to_tree (factorise (filter (tree_to_list (Add (f, g)) 0)))
 			| Sub (f, g) -> list_to_tree (factorise (filter (tree_to_list (Sub (f, g)) 0)))
+
+			(* f1 * f2 -> calcul (f1 * f2) *)
 			| Mul (Float f1, Float f2) -> Float (f1 *. f2)
+			(* f1 * x -> f1 * x *)
 			| Mul (Float f1, Var x) -> Mul (Float f1, Var x)
+			(* x * f1 -> f1 * x *)
 			| Mul (Var x, Float f1) -> Mul (Float f1, Var x)
-			| Mul (Var x, Var y) when x = y -> Puis (Var x, Float 2.)
-			| Mul (f, g) -> simp (Mul (simp f, simp g))
+			(* x ^ f * x -> x ^ (f + 1) *)
+			| Mul (Puis (f, g), i) when f = i -> Puis (f, simp (Add (g, Float 1.)))
+			(* f * g when f = g -> f ^ 2 *)
+			| Mul (f, g) when f = g -> Puis (simp f, Float 2.)
+			
+			| Mul (f, g) -> Mul (simp f, simp g)
 
-			(*
-			| Add (f, Mul (Float f1, g)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
-			| Add (f, Mul (g, Float f1)) when f = g -> simp (Mul (Float (f1 +. 1.), f))
-			| Add (Mul (Float f1, f), g) when f = g -> simp (Mul (Float (f1 +. 1.), f))
-			| Add (Mul (f, Float f1), g) when f = g -> simp (Mul (Float (f1 +. 1.), f))*)
+			| Puis (f, g) -> Puis (simp f, simp g)
 
-(*let rec sub_tree_list f i =
-	match (f,i) with
-		| (f, 0) -> [Plus f]
-		| (f, 1) -> [Minus f]
-		| (Add (f, g), _) -> (sub_tree_list f 0) @ (sub_tree_list f 0)
-		| (Sub (f, g), _) -> (sub_tree_list f 1) @ (sub_tree_list f 1)
-		| _ -> failwith "error"
+			(* 0 / x -> 0 *)
+			| Div (Float 0., f) -> Float 0.
+			(* x / 1 -> x *)
+			| Div (f, Float 1.) -> simp f
+			(* f1 / f2 -> calcul (f1 / f2) *)
+			| Div (Float f1, Float f2) -> Float (f1 /. f2)
+			(* x / x -> 1 *)
+			| Div (f, g) when f = g -> Float 1.
+			
+			| Div (f, g) -> Div (simp f, simp g)
 
-let rec is_in f l =
-	match l with
-		| [] -> false
-		| h :: _ when h = f -> true
-		| h :: t -> is_in f t
-
-let rec reduce_list_subtree l =
+			| Cos f -> Cos (simp f)
+			| Sin f -> Sin (simp f)
+			| Exp f -> Exp (simp f)
+			| Ln f -> Ln (simp f)
+			| Sqrt f -> Sqrt (simp f)
+	and factorise l =
 	match l with
 		| [] -> []
-		| h :: t -> (
-					match h with
-						| Plus f -> if is_in (Minus f) l 
-									then reduce_list_subtree (List.filter (is_in (Plus f) == false && is_in (Minus f) == false) l) 
-									else reduce_list_subtree t
-						| Minus f -> if is_in (Plus f) l 
-									then reduce_list_subtree (List.filter (is_in (Plus f) == false && is_in (Minus f) == false) l) 
-									else reduce_list_subtree t
-					)
-	*)
+		| (Plus f) :: t -> let cpt = (1 + count (Plus(f)) t) in if cpt > 1 then [Times (cpt, simp f)] @ factorise (remove_all (Plus(f)) t) else [Plus (simp f)] @ factorise t
+		| (Minus f) :: t -> let cpt = (1 + count (Minus(f)) t) in if cpt > 1 then [Times (-cpt, simp f)] @ factorise (remove_all (Minus(f)) t) else [Minus (simp f)] @ factorise t
+		| (Times(_, _)) :: t -> failwith "filter: Times is present"
 
 let rec deriv f x =
 	match f with
@@ -271,6 +266,7 @@ let rec integrate f x =
 		| Var v -> Var v
 		| Add (f, g) -> Add (integrate f x, integrate g x)
 		| Sub (f, g) -> Sub (integrate f x, integrate g x)
+		| _ -> failwith "fonction integrate not finish"
 
 let is_entier e =
 	if e = float_of_int (int_of_float e)
