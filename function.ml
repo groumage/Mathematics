@@ -17,7 +17,7 @@ type subtree =
 	| Minus of formel
 	| Times of int * formel
 	| Division of int * formel
-	| Puissance of formel * float
+	| Puissance of formel * formel
 
 let rec string_fct f =
 	match f with
@@ -225,8 +225,8 @@ let rec list_to_tree_2 l =
 		| [] -> Float 1.
 		| [Times (i, f)] -> Puis (f, Float (float_of_int i))
 		| [Division (i, f)] -> Div (Float (float_of_int i), f)
-		| (Times (i, f)) :: t -> Mul (Puis (f, Float (float_of_int i)), list_to_tree t)
-		| (Division (i, f)) :: t -> Mul (Div (Float (float_of_int i), f), list_to_tree t)
+		| (Times (i, f)) :: t -> Mul (Puis (f, Float (float_of_int i)), list_to_tree_2 t)
+		| (Division (i, f)) :: t -> Mul (Div (Float (float_of_int i), f), list_to_tree_2 t)
 
 let rec simplify f =
 	let f_simplify = simp f in
@@ -238,16 +238,6 @@ let rec simplify f =
 			| Float f -> Float f
 			| Var x -> Var x
 
-			(* 0 + x -> x *)
-			| Add (Float 0., f) -> simp f
-			(* x + 0 -> x *)
-			| Add (f, Float 0.) -> simp f
-			(* f1 + f2-> calcul (f1 + f2) *)
-			| Add (Float f1, Float f2) -> Float (f1 +. f2)
-
-			(* the commutative property of addition rules e.g. Plus (f), Minus (g), Minus (h) when f = h -> Minus (g) *)
-			| Add (f, g) -> list_to_tree (factorise (filter (tree_to_list (Add (f, g)) 0)))
-			| Sub (f, g) -> list_to_tree (factorise (filter (tree_to_list (Sub (f, g)) 0)))
 
 			(* f1 * f2 -> calcul (f1 * f2) *)
 			| Mul (Float f1, Float f2) -> Float (f1 *. f2)
@@ -275,6 +265,17 @@ let rec simplify f =
 
 			| Mul (f, g) -> list_to_tree_2 (factorise (filter (tree_to_list_2 (Mul (f, g)) 0)))
 			| Div (f, g) -> Div (simp f, simp g)
+
+			(* 0 + x -> x *)
+			| Add (Float 0., f) -> simp f
+			(* x + 0 -> x *)
+			| Add (f, Float 0.) -> simp f
+			(* f1 + f2-> calcul (f1 + f2) *)
+			| Add (Float f1, Float f2) -> Float (f1 +. f2)
+
+			(* the commutative property of addition rules e.g. Plus (f), Minus (g), Minus (h) when f = h -> Minus (g) *)
+			| Add (f, g) -> list_to_tree (factorise (filter (tree_to_list (Add (f, g)) 0)))
+			| Sub (f, g) -> list_to_tree (factorise (filter (tree_to_list (Sub (f, g)) 0)))
 			
 			(*| Mul (f, g) -> list_to_tree (factorise (filter (tree_to_list (Mul (f, g)) 0)))
 			| Div (f, g) -> list_to_tree (factorise (filter (tree_to_list (Div (f, g)) 0)))*)
