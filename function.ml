@@ -151,8 +151,10 @@ let rec tree_to_list f i =
 
 let rec tree_to_list_2 f i =
 	match (f, i) with
-		| (Mul (f, g), _) -> tree_to_list_2 f 0 @ tree_to_list_2 g 0
-		| (Div (f, g), _) -> tree_to_list_2 f 0 @ tree_to_list_2 g 1
+		| (Mul (f, g), 0) -> tree_to_list_2 f 0 @ tree_to_list_2 g 0
+		| (Mul (f, g), 1) -> tree_to_list_2 f 1 @ tree_to_list_2 g 1
+		| (Div (f, g), 0) -> tree_to_list_2 f 0 @ tree_to_list_2 g 1
+		| (Div (f, g), 1) -> tree_to_list_2 f 1 @ tree_to_list_2 g 0
 		| (f, 0) -> [Times (1, f)]
 		| (f, 1) -> [Division (1, f)]
 
@@ -259,12 +261,15 @@ let rec simplify f =
 			(* x / x -> 1 *)
 			(*| Div (f, g) when f = g -> Float 1.*)
 
+			| Div (Float f1, f) -> Div (Float f1, simp f)
+			| Div (f, Float f1) -> Div (simp f, Float f1)
+
 			| Puis (f, Float 1.) -> simp f
 
 			| Puis (f, g) -> Puis (simp f, simp g)
 
 			| Mul (f, g) -> list_to_tree_2 (factorise (filter (tree_to_list_2 (Mul (f, g)) 0)))
-			| Div (f, g) -> Div (simp f, simp g)
+			| Div (f, g) -> print_string (string_fct f);print_string "\n";list_to_tree_2 (factorise (filter (tree_to_list_2 (Div (simp f, simp g)) 0)))
 
 			(* 0 + x -> x *)
 			| Add (Float 0., f) -> simp f
