@@ -26,6 +26,7 @@ expr:
 	|	VAR							{ var $1 }
 	| 	FLOAT VAR 					{ mul (flt $1) (var $2) }
 	| 	LPAR expr RPAR				{ $2 }
+	/*| 	FLOAT TIMES expr DIV expr 	{ mul (flt $1) (div $3 $5) }*/
 	| 	expr TIMES expr				{ mul $1 $3 }
 	| 	expr DIV expr				{ div $1 $3 }
 	| 	expr PLUS expr				{ add $1 $3 }

@@ -240,6 +240,18 @@ let rec simplify f =
 			| Float f -> Float f
 			| Var x -> Var x
 
+			(* 0 + x -> x *)
+			| Add (Float 0., f) -> simp f
+			(* x + 0 -> x *)
+			| Add (f, Float 0.) -> simp f
+			(* f1 + f2-> calcul (f1 + f2) *)
+			| Add (Float f1, Float f2) -> Float (f1 +. f2)
+
+			(*| Add (f, Float f1) when f1 < 0. -> Sub (simp f, Float f1)*)
+
+			(* the commutative property of addition rules e.g. Plus (f), Minus (g), Minus (h) when f = h -> Minus (g) *)
+			| Add (f, g) -> list_to_tree (factorise (filter (tree_to_list (Add (f, g)) 0)))
+			| Sub (f, g) -> list_to_tree (factorise (filter (tree_to_list (Sub (f, g)) 0)))
 
 			(* f1 * f2 -> calcul (f1 * f2) *)
 			| Mul (Float f1, Float f2) -> Float (f1 *. f2)
@@ -269,18 +281,8 @@ let rec simplify f =
 			| Puis (f, g) -> Puis (simp f, simp g)
 
 			| Mul (f, g) -> list_to_tree_2 (factorise (filter (tree_to_list_2 (Mul (f, g)) 0)))
-			| Div (f, g) -> print_string (string_fct f);print_string "\n";list_to_tree_2 (factorise (filter (tree_to_list_2 (Div (simp f, simp g)) 0)))
+			| Div (f, g) -> list_to_tree_2 (factorise (filter (tree_to_list_2 (Div (f, g)) 0)))
 
-			(* 0 + x -> x *)
-			| Add (Float 0., f) -> simp f
-			(* x + 0 -> x *)
-			| Add (f, Float 0.) -> simp f
-			(* f1 + f2-> calcul (f1 + f2) *)
-			| Add (Float f1, Float f2) -> Float (f1 +. f2)
-
-			(* the commutative property of addition rules e.g. Plus (f), Minus (g), Minus (h) when f = h -> Minus (g) *)
-			| Add (f, g) -> list_to_tree (factorise (filter (tree_to_list (Add (f, g)) 0)))
-			| Sub (f, g) -> list_to_tree (factorise (filter (tree_to_list (Sub (f, g)) 0)))
 			
 			(*| Mul (f, g) -> list_to_tree (factorise (filter (tree_to_list (Mul (f, g)) 0)))
 			| Div (f, g) -> list_to_tree (factorise (filter (tree_to_list (Div (f, g)) 0)))*)
