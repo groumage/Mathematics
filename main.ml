@@ -73,14 +73,7 @@ let main =
       				in
       				let fct_formel = ref result
       				in
-      				fct_formel := Function.simplify !fct_formel;
-      				if (Function.free_variables_present !fct_formel "x")
-					then
-						begin 
-							print_string "Free variables are presents. The function can't be draw.\n";
-							choice
-						end
-					else
+      				fct_formel := simplify_expr (parse_expr (!fct_formel));
 						begin
 							let fen = Graph.create_graph (Graph.length_x + 2) (Graph.length_y + 2) !Graph.min_abs !Graph.max_abs !Graph.min_ord !Graph.max_ord
 							in
@@ -109,7 +102,7 @@ let main =
 									| 'd' ->	begin
 													Graphics.clear_graph();
 													fct_formel := Function.deriv !fct_formel "x";
-													fct_formel := Function.simplify !fct_formel;
+													(*fct_formel := Function.simplify !fct_formel;*)
 													map_tab_y := Graph.map !fct_formel tab_y;
 													zip_tab := Graph.zip tab_x !map_tab_y;
 													Graph.draw_center_lines_graph (Graph.length_x + 2) (Graph.length_y + 2) !Graph.min_abs !Graph.max_abs !Graph.min_ord !Graph.max_ord;
@@ -146,6 +139,6 @@ let main =
 		print_string "3. Graphic\n";
 		print_string "4. Function calcualtor\n";
 		print_string "5. Exit\n";
-		(*print_int (List.length (Function.factorise (Add (Var "x", Add(Var "x", Add (Var "x", Var "x"))))));*)
+		(*print_int (List.length (Function.factorise (Plus (Var "x", Minus (Times (2, Var "x"), Var "x")))));*)
 		res := loop (read_int ())
 	done

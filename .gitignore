@@ -14,6 +14,7 @@ parser.mli
 project.out
 project.exe
 Makefile
+save.ml
 
 # ocamlbuild working directory
 _build/

@@ -119,23 +119,23 @@ let create_matrix m dim_x dim_y =
 	Graphics.moveto 5 !mem_pos_y;
 	Graphics.draw_string ("Trace : " ^ string_of_float trace)
 	
-let map f t =
-	let tab = Array.make (Array.length t) 0. in
-	for i = 0 to ((Array.length t) - 1) do
-		tab.(i) <- Function.calcul_fct f t.(i)
+let map e tab =
+	let map_tab = Array.make (Array.length tab) 0. in
+	for i = 0 to (Array.length tab) - 1 do
+		map_tab.(i) <- Function.eval_expr e tab.(i)
 	done;
 tab
 
-let zip t1 t2 =
-	if Array.length t1 != Array.length t2
+let zip tab_x tab_y =
+	if Array.length tab_x != Array.length tab_y
 	then
 		failwith "zip: wrong tab dimensions"
 	else
-		let t = Array.make (Array.length t1) ({x = 0.; y = 0.}) in
-		for i = 0 to ((Array.length t) - 1) do
-			t.(i) <- {x = t1.(i); y = t2.(i)}
+		let zip_tab = Array.make (Array.length tab_x) ({x = 0.; y = 0.}) in
+		for i = 0 to (Array.length zip_tab) - 1 do
+			zip_tab.(i) <- {x = tab_x.(i); y = tab_y.(i)}
 		done;
-t
+zip_tab
 
 let trace t c =
 	Graphics.set_color c;
@@ -151,7 +151,7 @@ let trace t c =
 
 let print_fct f =
 	Graphics.set_color Graphics.black;
-	let string_f = Function.string_fct f in
+	let string_f = Function.print_expr f in
 	let (x_text, y_text) = Graphics.text_size string_f in
 	Graphics.moveto 5 (decalage_y - y_text - 5);
 	Graphics.draw_string ("f(x) = " ^ string_f)

@@ -303,7 +303,7 @@ let rec determinant m =
 		else
 			let somme = ref 0. in
 			for indice_col = 1 to p do
-				somme := !somme +. (Util.pow_float (-.1.) (1+indice_col)) *. m.(line_selected-1).(indice_col-1) *. determinant (reduce_matrix line_selected indice_col m);
+				somme := !somme +. (Util.power (-1.) (1. +. float_of_int(indice_col))) *. m.(line_selected-1).(indice_col-1) *. determinant (reduce_matrix line_selected indice_col m);
 			done;
 		!somme
 			
