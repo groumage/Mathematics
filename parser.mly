@@ -37,7 +37,7 @@ yacc_eqn:
 yacc_expr:
    exp EOF              { $1 }
 
-exp:
+exp:  
    op1                  { $1 }
 
 op1:

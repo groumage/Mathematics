@@ -216,10 +216,10 @@ type eqn = expr * expr;;
 (****************************************
  * Lexer/Parser definitions
  ****************************************)
-type token = PLUS | MINUS | TIMES | DIV | POWER | LPAREN | RPAREN | EQUALS
+(*type token = PLUS | MINUS | TIMES | DIV | POWER | LPAREN | RPAREN | EQUALS
            | FLOAT of float
            | VAR of var
-           | EOF;;
+           | EOF;;*)
 
 (****************************************
  * Data accessors
