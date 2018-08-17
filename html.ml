@@ -1,4 +1,5 @@
 type attribut = Alg of string
+							| Href of string
 
 type attributs = attribut list
 
@@ -30,6 +31,7 @@ let rec tree_to_string tree =
 												 | Title -> "<title " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</title>\n"
 												 | Head -> "<head " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</head>\n"
 												 | Body -> "<body " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</body>\n"
+												 | Link -> "link " ^ attributes_to_string a ^ ">\n"
 												 | H i -> "<h" ^ string_of_int i ^ " " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</h" ^ string_of_int i ^ ">\n"
 												 | B -> "<b " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</b>\n"
 												 | I -> "<i " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</i>\n"
@@ -48,6 +50,7 @@ and attributes_to_string lst =
 	  [] -> ""
 	| h :: t -> match h with
 								Alg s -> "align=\"" ^ s ^ "\" " ^ attributes_to_string t
+							| Href s -> "href=" ^ s ^ " " ^ attributes_to_string t
 
 let init_arbre =
 	let fic = open_out "res.html" in
