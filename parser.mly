@@ -37,7 +37,7 @@ yacc_eqn:
 yacc_expr:
    exp EOF              { $1 }
 
-exp:  
+exp: 
    op1                  { $1 }
 
 op1:
@@ -67,9 +67,3 @@ atom:
  | FLOAT                { Leaf(Poly(poly_of_float $1)) }
 
 %%
-
-let eqn_of_string s  = yacc_eqn  Lexer.lexer_main (Lexing.from_string s);;
-let expr_of_string s = yacc_expr Lexer.lexer_main (Lexing.from_string s);;
-
-let parse_eqn  = eqn_of_string;; 
-let parse_expr = expr_of_string;;

@@ -1,8 +1,14 @@
 open Function
 open Graph
-	
-let main =
-	let loop choice =
+
+let eqn_of_string s  = Parser.yacc_eqn  Lexer.lexer_main (Lexing.from_string s)
+let expr_of_string s = Parser.yacc_expr Lexer.lexer_main (Lexing.from_string s)
+
+let parse_eqn  = eqn_of_string
+let parse_expr = expr_of_string
+
+let main = Html.init_arbre
+	(*let loop choice =
 		match choice with
   			| 1 ->	let _ = Sys.command "clear" in
   					let matrix = Matrix.get_matrix "MATRIX CALCULATOR"
@@ -67,7 +73,7 @@ let main =
 					print_string "GRAPHICS\n\n";
 					print_string "Enter the function:\n";
 					print_endline "f(x) = ";
-					let lexbuf = Lexing.from_channel stdin
+					(*let lexbuf = Lexing.from_channel stdin
 					in
 					let result = Parser.main Lexer.token lexbuf
       				in
@@ -122,9 +128,9 @@ let main =
 													e := Graphics.wait_next_event [Graphics.Key_pressed]
 												end
 									| _ ->	e := Graphics.wait_next_event [Graphics.Key_pressed]
-							done;
+							done;*)
 							choice
-						end
+						(*end*)
 			| 5 -> 	print_string "\nSee you next time !\n";
 					choice
   			| _ -> 	failwith "loop: wrong choice" 
@@ -141,4 +147,4 @@ let main =
 		print_string "5. Exit\n";
 		(*print_int (List.length (Function.factorise (Plus (Var "x", Minus (Times (2, Var "x"), Var "x")))));*)
 		res := loop (read_int ())
-	done
+	done*)
