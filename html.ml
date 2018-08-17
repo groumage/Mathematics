@@ -11,6 +11,7 @@ type balise = Html
 						| B
 						| I
 						| U
+						| Del
 						| Ul
 						| Li
 						| P
@@ -28,8 +29,14 @@ let rec tree_to_string tree =
 												   Html -> "<html " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</html>"
 												 | Title -> "<title " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</title>\n"
 												 | Head -> "<head " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</head>\n"
-												 | Body -> "<body " ^ attributes_to_string a ^ ">\n"	^ tree_to_list t ^ "</body>\n"
+												 | Body -> "<body " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</body>\n"
 												 | H i -> "<h" ^ string_of_int i ^ " " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</h" ^ string_of_int i ^ ">\n"
+												 | B -> "<b " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</b>\n"
+												 | I -> "<i " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</i>\n"
+												 | U -> "<u " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</u>\n"
+												 | Del -> "<del " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</del>\n"
+												 | Ul -> "<ul " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</ul>\n"
+												 | Li -> "<li " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</li>\n"
 												 | P -> "<p " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</p>\n"
 												)
 and tree_to_list tree_list =
@@ -44,7 +51,9 @@ and attributes_to_string lst =
 
 let init_arbre =
 	let fic = open_out "res.html" in
-	let b5 = Balise (H 1, [Alg "center"], [Text ("je suis le body\n")]) in
+	let b7 = Balise (Li, [], [Text ("je suis le body2\n")]) in 
+	let b6 = Balise (Li, [], [Text ("je suis le body1\n")]) in 
+	let b5 = Balise (Ul, [], [b6; b7]) in
 	let b4 = Balise (Body, [], [b5]) in
 	let b3 = Balise (Title, [], [Text ("titre de la page\n")]) in
 	let b2 = Balise (Head, [], [b3; Text ("je suis le head<br/>\n")]) in
