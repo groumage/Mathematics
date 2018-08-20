@@ -7,12 +7,13 @@
 *.cmx
 *.cmxs
 *.cmxa
+*.bytes
+*.out
+*.exe
 .depend
 lexer.ml
 parser.ml
 parser.mli
-project.out
-project.exe
 Makefile
 save.ml
 
