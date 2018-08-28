@@ -113,12 +113,11 @@ let init_arbre =
 	let p1 = Balise (P, [], [Text "Matrix"]) in
 	let text1 = Balise (Textarea, [Id "input_1"; Rows 2; Cols 40], []) in
 	let btn1 = Balise (Button, [Id "btn_1"], []) in
-	let text2 = Balise (Textarea, [Id "output_1"; Rows 2; Cols 40], []) in
 	let p2 = Balise (P, [], [Text "Simplify expressions"]) in
-	let text3 = Balise (Textarea, [Id "input_2"; Rows 2; Cols 40], []) in
+	let text2 = Balise (Textarea, [Id "input_2"; Rows 2; Cols 40], []) in
 	let btn2 = Balise (Button, [Id "btn_2"], []) in
-	let text4 = Balise (Textarea, [Id "output_2"; Rows 2; Cols 40], []) in
-	let body = Balise (Body, [], [h1; p1; text1; btn1; text2; p2; text3; btn2; text4]) in
+	let text3 = Balise (Textarea, [Id "output_1"; Rows 2; Cols 40], []) in
+	let body = Balise (Body, [], [h1; p1; text1; btn1; p2; text2; btn2; text3]) in
 	let html = Balise (Html, [], [head; body]) in
 	output_string fic (tree_to_string html);
 	close_out fic
