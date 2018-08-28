@@ -101,6 +101,12 @@ clean:
 	@rm -f parser.ml
 	@echo "\033[0;31m[Deleting]\033[0m" parser.mli
 	@rm -f parser.mli
+	@echo "\033[0;31m[Deleting]\033[0m" test.js
+	@rm -f test.js
+	@echo "\033[0;31m[Deleting]\033[0m" test.bytes
+	@rm -f test.bytes
+	@echo "\033[0;31m[Deleting]\033[0m" res.html
+	@rm -f res.html
 
 depend: $(SOURCES2)
 	@echo "\033[0;35m[Dependance]\033[0m" "*.mli *.ml > .depend"
