@@ -7,7 +7,7 @@ let expr_of_string s = Parser.yacc_expr Lexer.lexer_main (Lexing.from_string s)
 let parse_eqn  = eqn_of_string
 let parse_expr = expr_of_string
 
-let _ = Html.init_arbre
+let _ = Html.init_site
 	(*let loop choice =
 		match choice with
   			| 1 ->	let _ = Sys.command "clear" in

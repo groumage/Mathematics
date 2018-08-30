@@ -1,4 +1,3 @@
-
 let doc = Dom_html.document
 
 (* To log some debuging message in the browser console *)
@@ -18,7 +17,7 @@ let matrix () =
   let btn1 = get_elem "btn_1" in
   text1##placeholder <- Js.string "Write your matrix !";
   btn1##textContent <- Js.some (Js.string "Calculate");
-  btn1##onclick <- Dom_html.handler (fun ev -> text1##value <- Js.string "click !"; Js._false)
+  btn1##onclick <- Dom_html.handler (fun ev -> text1##value <- Js.string (Matrix.str_of_matrix (Matrix.make_matrix 3 3)) ; Js._false)
 
 let simplify_expression () =
   let text1 = get_textarea "input_2" in

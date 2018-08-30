@@ -1,4 +1,5 @@
 SOURCES = util.ml matrix.ml function.ml parser.mly lexer.mll graph.ml html.ml main.ml
+SOURCESHTML = index.ml
 
 EXEC = project.exe
 
@@ -22,28 +23,24 @@ CUSTOM = -custom
 
 all: depend $(EXEC)
 
-opt: $(EXEC).opt
-
 SOURCES1 = $(SOURCES:.mly=.ml)
 SOURCES2 = $(SOURCES1:.mll=.ml)
+SOURCES1HTML = $(SOURCESHTML:.ml=.bytes)
 OBJS = $(SOURCES2:.ml=.cmo)
-OPTOBJS = $(SOURCES2:.ml=.cmx)
 
 $(EXEC): $(OBJS)
-	@$(CAMLC) $(CUSTOM) graphics.cma str.cma -o $(EXEC) $(OBJS)
+	$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg $(CUSTOM) $(LIBS) -o $(EXEC) $(OBJS)
 	@echo "\033[0;34m[Creation]\033[0m" html interface
-	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) -o test.bytes test.ml
-	@$(JCAML) test.bytes
+	$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o $(SOURCES1HTML) $(OBJS) $(SOURCESHTML)
+	@$(JCAML) $(SOURCES1HTML)
 	@echo "\033[0;32m[Project complete]\033[0m" $(EXEC)
-	
-$(EXEC).opt: $(OPTOBJS)
-	$(CAMLOPT) -o $(EXEC) $(LIBS:.cma=.cmxa) $(OPTOBJS)
 
+.SUFFIXES:
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly
 
 .ml.cmo:
 	@echo "\033[0;33m[Compiling]\033[0m" $<
-	@$(CAMLC) -c $<
+	@$(CAMLFIND) $(CAMLC) -c -package $(JCAML) -package $(JCAMLP4) -syntax $(CAMLP4) $<
 
 .mli.cmi:
 	@echo "\033[0;33m[Compiling]\033[0m" $<
@@ -101,12 +98,12 @@ clean:
 	@rm -f parser.ml
 	@echo "\033[0;31m[Deleting]\033[0m" parser.mli
 	@rm -f parser.mli
-	@echo "\033[0;31m[Deleting]\033[0m" test.js
-	@rm -f test.js
-	@echo "\033[0;31m[Deleting]\033[0m" test.bytes
-	@rm -f test.bytes
-	@echo "\033[0;31m[Deleting]\033[0m" res.html
-	@rm -f res.html
+	@echo "\033[0;31m[Deleting]\033[0m" *.js
+	@rm -f *.js
+	@echo "\033[0;31m[Deleting]\033[0m" *.bytes
+	@rm -f *.bytes
+	@echo "\033[0;31m[Deleting]\033[0m" *.html
+	@rm -f *.html
 
 depend: $(SOURCES2)
 	@echo "\033[0;35m[Dependance]\033[0m" "*.mli *.ml > .depend"

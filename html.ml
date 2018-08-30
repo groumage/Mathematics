@@ -48,8 +48,7 @@ type css = attributs M.t
 
 let m = M.empty
 let m = M.add (H 1) ([Color "blue"]) m
-let m = M.add (H 2) ([Color "navy"; BackgroundColor "yellow"]) m
-let m = M.add (Li) ([FontSize 10]) m
+let m = M.add (H 2) ([Color "navy"]) m
 
 let style_to_string2 s =
 	match s with
@@ -57,33 +56,33 @@ let style_to_string2 s =
 	| FontSize i -> "font-size : " ^ string_of_int i ^ "px;"
 	| BackgroundColor s -> "background-color : " ^ s ^ ";"
 
-let rec tree_to_string tree =
+let rec tree_to_string tree name =
 	match tree with
 	  Text s -> s
 	| Balise (b, a, t) -> (match b with
-												   Html -> "<html " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</html>"
-												 | Title -> "<title " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</title>\n"
-												 | Head -> "<head " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</head>\n"
-												 | Body -> "<body " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</body>\n"
-												 | Link -> "<link " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</link>\n"
-												 | H i -> "<h" ^ string_of_int i ^ " " ^ attributes_to_string a ^ "style = \"" ^ style_to_string (H i) ^ "\">" ^ tree_to_list t ^ "</h" ^ string_of_int i ^ ">\n"
-												 | B -> "<b " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</b>\n"
-												 | I -> "<i " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</i>\n"
-												 | U -> "<u " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</u>\n"
-												 | Del -> "<del " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</del>\n"
-												 | Ul -> "<ul " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</ul>\n"
-												 | P -> "<p " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</p>\n"
-												 | Li -> "<li " ^ attributes_to_string a ^ "style = \"" ^ style_to_string Li ^ "\">" ^ tree_to_list t ^ "</li>\n"
-												 | Script -> "<script " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</script>\n"
-												 | Div -> "<div " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</div>\n"
-												 | Textarea -> "<textarea " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</textarea>\n"
-												 | Button -> "<button " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t ^ "</button>\n"
-												 | Empty -> attributes_to_string a ^ tree_to_list t
+												   Html -> "<html " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</html>"
+												 | Title -> "<title " ^ attributes_to_string a ^ ">\n" ^ name ^ tree_to_list t name ^ "</title>\n"
+												 | Head -> "<head " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</head>\n"
+												 | Body -> "<body " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</body>\n"
+												 | Link -> "<link " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</link>\n"
+												 | H i -> "<h" ^ string_of_int i ^ " " ^ attributes_to_string a ^ "style = \"" ^ style_to_string (H i) ^ "\">" ^ tree_to_list t name ^ "</h" ^ string_of_int i ^ ">\n"
+												 | B -> "<b " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</b>\n"
+												 | I -> "<i " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</i>\n"
+												 | U -> "<u " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</u>\n"
+												 | Del -> "<del " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</del>\n"
+												 | Ul -> "<ul " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</ul>\n"
+												 | P -> "<p " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</p>\n"
+												 | Li -> "<li " ^ attributes_to_string a ^ "style = \"" ^ style_to_string Li ^ "\">" ^ tree_to_list t name ^ "</li>\n"
+												 | Script -> "<script " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</script>\n"
+												 | Div -> "<div " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</div>\n"
+												 | Textarea -> "<textarea " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</textarea>\n"
+												 | Button -> "<button " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</button>\n"
+												 | Empty -> attributes_to_string a ^ tree_to_list t name
 												)
-and tree_to_list tree_list =
+and tree_to_list tree_list name =
 	match tree_list with
 		[] -> ""
-	| h :: t -> tree_to_string h ^ tree_to_list t
+	| h :: t -> tree_to_string h name ^ tree_to_list t name
 and attributes_to_string lst =
 	match lst with
 	  [] -> ""
@@ -104,23 +103,37 @@ and style_to_string balise =
 	in
 	decompose_lst a
 
-let init_arbre =
-	let fic = open_out "res.html" in
-	let title = Balise (Title, [], [Text "Test js_of_ocaml\n"]) in
-	let script = Balise (Script, [Type "text/javascript"; Src "test.js"], []) in
-	let head = Balise (Head, [], [title; script]) in
-	let h1 = Balise (H 1, [], [Text "Mathemataume's project"]) in
-	let p1 = Balise (P, [], [Text "Matrix"]) in
-	let text1 = Balise (Textarea, [Id "input_1"; Rows 2; Cols 40], []) in
-	let btn1 = Balise (Button, [Id "btn_1"], []) in
-	let p2 = Balise (P, [], [Text "Simplify expressions"]) in
-	let text2 = Balise (Textarea, [Id "input_2"; Rows 2; Cols 40], []) in
-	let btn2 = Balise (Button, [Id "btn_2"], []) in
-	let text3 = Balise (Textarea, [Id "output_1"; Rows 2; Cols 40], []) in
-	let body = Balise (Body, [], [h1; p1; text1; btn1; p2; text2; btn2; text3]) in
-	let html = Balise (Html, [], [head; body]) in
-	output_string fic (tree_to_string html);
-	close_out fic
+let init_site =
+	let page_name = ref "index" in
+
+	let index_title = Balise (Title, [], []) in
+	let index_script = Balise (Script, [Type "text/javascript"; Src (!page_name ^ ".js")], []) in
+	let index_head = Balise (Head, [], [index_title; index_script]) in
+	let index_h1 = Balise (H 1, [], [Text "Mathemataume's project"]) in
+	let index_p1 = Balise (H 2, [], [Text "Matrix"]) in
+	let index_text1 = Balise (Textarea, [Id "input_1"; Rows 2; Cols 40], []) in
+	let index_btn1 = Balise (Button, [Id "btn_1"], []) in
+	let index_p2 = Balise (H 2, [], [Text "Simplify expressions"]) in
+	let index_text2 = Balise (Textarea, [Id "input_2"; Rows 2; Cols 40], []) in
+	let index_btn2 = Balise (Button, [Id "btn_2"], []) in
+	let index_text3 = Balise (Textarea, [Id "output_1"; Rows 2; Cols 40], []) in
+	let index_body = Balise (Body, [], [index_h1; index_p1; index_text1; index_btn1; index_p2; index_text2; index_btn2; index_text3]) in
+	let index_html = Balise (Html, [], [index_head; index_body]) in
+	let index_page = { nom = !page_name; document = index_html } in
+
+	let fic = ref (open_out (index_page.nom ^ ".html")) in
+	output_string !fic (tree_to_string index_page.document index_page.nom);
+	close_out !fic
+(*
+	page_name := "matrix" in
+
+	let matrix_title = Balise (Title, [], [Text "Mathemataume's project\n"]) in
+	let matrix_html = Balise (Html, [], []) in
+
+	let matrix_page = { nom = !page_name; document = matrix_html } in
+	fic := open_out (matrix_page.nom ^ ".html") in
+	output_string !fic (tree_to_string matrix_page.document);
+	close_out !fic*)
 (*
 	let b7 = Balise (I, [], [Text ("Ocaml")]) in
 	let b71 = Balise (B, [], [b7]) in
