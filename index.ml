@@ -12,12 +12,17 @@ let get_textarea id =
   Js.Opt.get (Dom_html.CoerceTo.textarea e)
     (fun () -> log ("failed to find '" ^ id ^ "' textarea"); assert false)
 
+let set_matrix_caracteristics n p det =
+  let div = get_elem "matrix_caracteristics" in
+  div##innerHTML <- Js.string ("Dimensions: " ^ string_of_int n ^ "x" ^ string_of_int p ^ "<br/>Determinant = " ^ string_of_int det)
+
 let matrix () =
   let text1 = get_textarea "input_1" in
   let btn1 = get_elem "btn_1" in
   text1##placeholder <- Js.string "Write your matrix !";
   btn1##textContent <- Js.some (Js.string "Calculate");
-  btn1##onclick <- Dom_html.handler (fun ev -> text1##value <- Js.string (Matrix.str_of_matrix (Matrix.make_matrix 3 3)) ; Js._false)
+  btn1##onclick <- Dom_html.handler (let matrix = Matrix.get_matrix text1##value in
+                                     fun ev -> set_matrix_caracteristics (Matrix.nb_lines matrix) (Matrix.nb_columns matrix) (Matrix.determinant matrix); Js._false)
 
 let simplify_expression () =
   let text1 = get_textarea "input_2" in
@@ -26,7 +31,8 @@ let simplify_expression () =
   text1##placeholder <- Js.string "Write your expression ...";
   text2##placeholder <- Js.string "... and see the result !";
   btn2##textContent <- Js.some (Js.string "Simplify");
-  btn2##onclick <- Dom_html.handler (fun ev -> text2##value <- Js.string "click !"; Js._false)
+  (*btn2##onclick <- Dom_html.handler (fun ev -> text2##value <- Js.string "click !"; Js._false)*)
+  btn2##onclick <- Dom_html.handler (fun ev -> text2##value <- text1##value; Js._false)
   (*let body = get_elem "test1" in
   let textbox = Dom_html.createTextarea doc in
 

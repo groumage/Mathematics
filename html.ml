@@ -109,15 +109,16 @@ let init_site =
 	let index_title = Balise (Title, [], []) in
 	let index_script = Balise (Script, [Type "text/javascript"; Src (!page_name ^ ".js")], []) in
 	let index_head = Balise (Head, [], [index_title; index_script]) in
-	let index_h1 = Balise (H 1, [], [Text "Mathemataume's project"]) in
+	let index_h1 = Balise (H 1, [Alg "center"], [Text "Mathemataume"]) in
 	let index_p1 = Balise (H 2, [], [Text "Matrix"]) in
-	let index_text1 = Balise (Textarea, [Id "input_1"; Rows 2; Cols 40], []) in
+	let index_text1 = Balise (Textarea, [Id "input_1"; Rows 10; Cols 40], []) in
 	let index_btn1 = Balise (Button, [Id "btn_1"], []) in
+	let index_matrix_caracteristics = Balise (Div, [Id "matrix_caracteristics"], [Text "Dimensions: -<br/>"; Text "Determinant = -"]) in
 	let index_p2 = Balise (H 2, [], [Text "Simplify expressions"]) in
 	let index_text2 = Balise (Textarea, [Id "input_2"; Rows 2; Cols 40], []) in
 	let index_btn2 = Balise (Button, [Id "btn_2"], []) in
 	let index_text3 = Balise (Textarea, [Id "output_1"; Rows 2; Cols 40], []) in
-	let index_body = Balise (Body, [], [index_h1; index_p1; index_text1; index_btn1; index_p2; index_text2; index_btn2; index_text3]) in
+	let index_body = Balise (Body, [], [index_h1; index_p1; index_text1; index_btn1; index_matrix_caracteristics; index_p2; index_text2; index_btn2; index_text3]) in
 	let index_html = Balise (Html, [], [index_head; index_body]) in
 	let index_page = { nom = !page_name; document = index_html } in
 

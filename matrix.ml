@@ -64,7 +64,10 @@ let str_of_matrix m =
 	let p = nb_columns m in
 	for i = 0 to (n-1) do
 		for j = 0 to (p-1) do
-			str := !str ^ " " ^ string_of_float m.(i).(j);
+			if Util.is_float_int m.(i).(j) then
+				str := !str ^ " " ^ string_of_int (int_of_float m.(i).(j))
+			else
+				str := !str ^ " " ^ string_of_float m.(i).(j)
 		done;
 		str := !str ^ "\n"
 	done;
@@ -308,18 +311,6 @@ let rec determinant m =
 		!somme
 			
 let get_matrix title =
-	let _ = Sys.command "clear"
-	in
-	print_string (title ^ "\n");
-	print_string "Matrix columns ?\n";
-	let columns = read_int ()
-	in
-	print_string "Matrix lines ?\n";
-	let lines = read_int ()
-	in
-	let matrix = make_matrix lines columns
-	in
-	print_string "Enter your matrix:\n";
 	for i = 1 to lines do
 		let line_to_split = read_line ()
 		in

@@ -29,9 +29,9 @@ SOURCES1HTML = $(SOURCESHTML:.ml=.bytes)
 OBJS = $(SOURCES2:.ml=.cmo)
 
 $(EXEC): $(OBJS)
-	$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg $(CUSTOM) $(LIBS) -o $(EXEC) $(OBJS)
+	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg $(CUSTOM) $(LIBS) -o $(EXEC) $(OBJS)
 	@echo "\033[0;34m[Creation]\033[0m" html interface
-	$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o $(SOURCES1HTML) $(OBJS) $(SOURCESHTML)
+	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o $(SOURCES1HTML) $(OBJS) $(SOURCESHTML)
 	@$(JCAML) $(SOURCES1HTML)
 	@echo "\033[0;32m[Project complete]\033[0m" $(EXEC)
 
