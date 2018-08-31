@@ -58,3 +58,13 @@ let abs_float a =
   if a > 0. then
     a
   else -.a
+
+let rec list_length l =
+  match l with
+    [] -> 0
+  | h :: t -> 1 + list_length t
+
+let rec get_list l i =
+  match l with
+    [] -> failwith "unbound"
+  | h :: t -> if i = 1 then h else get_list t (i-1)

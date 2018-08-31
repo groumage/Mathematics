@@ -14,15 +14,22 @@ let get_textarea id =
 
 let set_matrix_caracteristics n p det =
   let div = get_elem "matrix_caracteristics" in
-  div##innerHTML <- Js.string ("Dimensions: " ^ string_of_int n ^ "x" ^ string_of_int p ^ "<br/>Determinant = " ^ string_of_int det)
+  div##innerHTML <- Js.string ("Dimensions: " ^ string_of_int n ^ "x" ^ string_of_int p ^ "<br/>Determinant = " ^ string_of_float det)
+
+let error_input_matrix () =
+  let div = get_elem "matrix_caracteristics" in
+  div##innerHTML <- Js.string "This is not a matrix"
 
 let matrix () =
   let text1 = get_textarea "input_1" in
   let btn1 = get_elem "btn_1" in
   text1##placeholder <- Js.string "Write your matrix !";
   btn1##textContent <- Js.some (Js.string "Calculate");
-  btn1##onclick <- Dom_html.handler (let matrix = Matrix.get_matrix text1##value in
-                                     fun ev -> set_matrix_caracteristics (Matrix.nb_lines matrix) (Matrix.nb_columns matrix) (Matrix.determinant matrix); Js._false)
+  btn1##onclick <- Dom_html.handler (if Matrix.is_matrix (Js.to_string text1##value) then
+                                     let matrix = Matrix.get_matrix (Js.to_string text1##value) in
+                                     (fun ev -> set_matrix_caracteristics (Matrix.nb_lines matrix) (Matrix.nb_columns matrix) (Matrix.determinant matrix); Js._false)
+                                     else
+                                      fun ev -> error_input_matrix; Js._false)
 
 let simplify_expression () =
   let text1 = get_textarea "input_2" in

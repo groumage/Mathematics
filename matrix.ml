@@ -310,9 +310,13 @@ let rec determinant m =
 			done;
 		!somme
 			
-let get_matrix title =
-	for i = 1 to lines do
-		let line_to_split = read_line ()
+let get_matrix string_matrix =
+	let matrix_to_lines = Str.split (Str.regexp "[ \n]+") string_matrix in
+	let nb_lines = List.length matrix_to_lines in
+	let nb_columns = List.length (Str.split (Str.regexp "[ \t]+") (List.nth matrix_to_lines 1)) in
+	let matrix = make_matrix nb_lines nb_columns in
+	for i = 1 to nb_lines do
+		let line_to_split = List.nth matrix_to_lines i
 		in
 		let line_to_matrix = Str.split (Str.regexp "[ \t]+") line_to_split
 		in
@@ -325,3 +329,14 @@ let get_matrix title =
 		split_line 1 line_to_matrix
 	done;
 matrix
+
+let is_matrix string_matrix =
+	let matrix_to_lines = Str.split (Str.regexp "[ \n]+") string_matrix in
+	let nb_lines = List.length matrix_to_lines in
+	let nb_columns = List.length (Str.split (Str.regexp "[ \t]+") (List.nth matrix_to_lines 1)) in
+	let res = ref true in
+	for i = 1 to nb_lines do
+		let a = List.length (Str.split (Str.regexp "[ \t]+") (List.nth matrix_to_lines i)) in
+		res := !res && (a == nb_columns)
+	done;
+!res
