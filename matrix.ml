@@ -310,33 +310,60 @@ let rec determinant m =
 			done;
 		!somme
 			
+let split expr s =
+	let length = ref (String.length s) in
+	if !length != 0 then
+		let mem1 = ref 0 in
+		let mem2 = ref 0 in
+		let l = ref [] in
+		let str = ref "" in
+		if s.[!length - 1] != '\n' then (str := !str ^ (s ^ String.make 1 '\n'); length := !length + 1) else str := !str ^ s;
+		while !mem1 != !length - 1 do
+			while !str.[!mem2] != expr && !mem2 != !length - 1 do
+				mem2 := !mem2 + 1;
+			done;
+			l := !l @ [String.sub !str !mem1 (!mem2 - !mem1)];
+			while !str.[!mem2] = expr && !mem2 != !length - 1 do
+				mem2 := !mem2 + 1;
+			done;
+			mem1 := !mem2;
+		done;
+		!l
+	else
+	[]
+
 let get_matrix string_matrix =
-	let matrix_to_lines = Str.split (Str.regexp "[ \n]+") string_matrix in
+	let matrix_to_lines = split '\n' string_matrix in
 	let nb_lines = List.length matrix_to_lines in
-	let nb_columns = List.length (Str.split (Str.regexp "[ \t]+") (List.nth matrix_to_lines 1)) in
-	let matrix = make_matrix nb_lines nb_columns in
-	for i = 1 to nb_lines do
-		let line_to_split = List.nth matrix_to_lines i
-		in
-		let line_to_matrix = Str.split (Str.regexp "[ \t]+") line_to_split
-		in
-		let rec split_line j line =
-			match line with
-				| [] -> ()
-				| h :: t ->	matrix.(i - 1).(j - 1) <- float_of_string h;
-							split_line (j + 1) t
-		in
-		split_line 1 line_to_matrix
-	done;
-matrix
+	if nb_lines > 0 then
+		let nb_columns = List.length (split ' ' (List.nth matrix_to_lines 0)) in
+		let matrix = make_matrix nb_lines nb_columns in
+		for i = 1 to nb_lines do
+			let line_to_split = List.nth matrix_to_lines (i - 1)
+			in
+			let line_to_matrix = split ' ' line_to_split
+			in
+			let rec split_line j line =
+				match line with
+					| [] -> ()
+					| h :: t ->	matrix.(i - 1).(j - 1) <- float_of_string h;
+								split_line (j + 1) t
+			in
+			split_line 1 line_to_matrix
+		done;
+	matrix
+else
+	failwith "toto"
 
 let is_matrix string_matrix =
-	let matrix_to_lines = Str.split (Str.regexp "[ \n]+") string_matrix in
+	let matrix_to_lines = split ' ' string_matrix in
 	let nb_lines = List.length matrix_to_lines in
-	let nb_columns = List.length (Str.split (Str.regexp "[ \t]+") (List.nth matrix_to_lines 1)) in
+	if nb_lines == 0 then false
+else
+	let nb_columns = List.length (split ' ' (List.nth matrix_to_lines 0)) in
 	let res = ref true in
-	for i = 1 to nb_lines do
-		let a = List.length (Str.split (Str.regexp "[ \t]+") (List.nth matrix_to_lines i)) in
+	for i = 0 to nb_lines - 1 do
+		let a = List.length (split ' ' (List.nth matrix_to_lines i)) in
 		res := !res && (a == nb_columns)
 	done;
 !res
