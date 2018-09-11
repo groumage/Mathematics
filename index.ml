@@ -22,13 +22,39 @@ let error_input_matrix () =
 
 let matrix () =
   let text1 = get_textarea "input_1" in
-  let btn1 = get_elem "btn_1" in
   text1##placeholder <- Js.string "Write your matrix !";
+  let btn1 = get_elem "btn_1" in
   btn1##textContent <- Js.some (Js.string "Calculate");
-  btn1##onclick <- Dom_html.handler (if Matrix.is_matrix (Js.to_string text1##value) 
+
+  let calcul () =
+    let input = Js.to_string text1##value in
+    let matrix = Matrix.get_matrix (input) in
+    set_matrix_caracteristics 10 10 (Matrix.determinant matrix)
+  in
+  btn1##onclick <- Dom_html.handler (fun ev -> calcul(); Js._false)
+
+ (* btn1##onclick <- Dom_html.handler (if Matrix.is_matrix (Js.to_string text1##value) 
                                      then (let matrix = Matrix.get_matrix (Js.to_string text1##value) in
                                       fun ev -> (set_matrix_caracteristics (Matrix.nb_lines matrix) (Matrix.nb_columns matrix) (Matrix.determinant matrix) ; Js._false))
                                      else fun ev -> (error_input_matrix() ; Js._false))
+    if Matrix.is_matrix (Js.to_string text1##value) 
+     then (let matrix = Matrix.get_matrix (Js.to_string text1##value) in
+      fun ev -> (set_matrix_caracteristics (Matrix.nb_lines matrix) (Matrix.nb_columns matrix) (Matrix.determinant matrix) ; Js._false))
+     else fun ev -> (error_input_matrix() ; Js._false)*)
+
+
+let test2 () =
+  let t1 = get_textarea "input" in
+  t1##placeholder <- Js.string "What's your name ?";
+  let t2 = get_textarea "result" in
+  let b2 = get_elem "b-conv" in
+  b2##textContent <- Js.some (Js.string "Go");
+  let say_hello () =
+    let input = Js.to_string t1##value in
+    let matrix = Matrix.get_matrix (input) in
+    t2##value <- Js.string ("Hello "^input^" !" ^ string_of_float (Matrix.determinant matrix))
+  in
+  b2##onclick <- Dom_html.handler (fun ev -> say_hello (); Js._false)
 
 let simplify_expression () =
   let text1 = get_textarea "input_2" in
@@ -64,3 +90,20 @@ let simplify_expression () =
 let onload _ = matrix (); simplify_expression(); Js._false
 
 let _ = Dom_html.window##onload <- Dom_html.handler onload
+
+(*let test1 () =
+  let body = get_elem "test1" in
+  let textbox = Dom_html.createTextarea doc in
+  textbox##rows <- 2; textbox##cols <- 40;
+  textbox##value <- Js.string "Nothing yet...";
+
+  let button = Dom_html.createButton doc in
+  button##textContent <- Js.some (Js.string "Say hello !");
+  button##onclick <- Dom_html.handler (fun ev -> textbox##value <- Js.string "Hello !"; Js._false);
+  Dom.appendChild body textbox;
+  Dom.appendChild body button*)
+
+
+(*let onload _ = test1 (); test2 (); Js._false
+
+let _ = Dom_html.window##onload <- Dom_html.handler onload*)
