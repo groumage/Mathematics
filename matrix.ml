@@ -353,17 +353,16 @@ let get_matrix string_matrix =
 		done;
 	matrix
 else
-	failwith "toto"
+	failwith ("This is not a matrix:" ^ string_matrix)
 
 let is_matrix string_matrix =
-	let matrix_to_lines = split ' ' string_matrix in
+	let matrix_to_lines = split '\n' string_matrix in
 	let nb_lines = List.length matrix_to_lines in
 	if nb_lines == 0 then false
-else
-	let nb_columns = List.length (split ' ' (List.nth matrix_to_lines 0)) in
-	let res = ref true in
-	for i = 0 to nb_lines - 1 do
-		let a = List.length (split ' ' (List.nth matrix_to_lines i)) in
-		res := !res && (a == nb_columns)
-	done;
-!res
+	else
+		let nb_columns = List.length (split ' ' (List.nth matrix_to_lines 0)) in
+		let res = ref true in
+		for i = 0 to nb_lines - 1 do
+			res := !res && (List.length (split ' ' (List.nth matrix_to_lines i)) == nb_columns)
+		done;
+	!res
