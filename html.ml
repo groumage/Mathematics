@@ -118,7 +118,8 @@ let init_site =
 	let index_text2 = Balise (Textarea, [Id "input_2"; Rows 2; Cols 40], []) in
 	let index_btn2 = Balise (Button, [Id "btn_2"], []) in
 	let index_text3 = Balise (Textarea, [Id "output_1"; Rows 2; Cols 40], []) in
-	let index_body = Balise (Body, [], [index_h1; index_p1; index_text1; index_btn1; index_matrix_caracteristics; index_p2; index_text2; index_btn2; index_text3]) in
+	let index_info_expr_simp = Balise (Div, [Id "simplify_expr"], []) in
+	let index_body = Balise (Body, [], [index_h1; index_p1; index_text1; index_btn1; index_matrix_caracteristics; index_p2; index_text2; index_btn2; index_text3; index_info_expr_simp]) in
 	let index_html = Balise (Html, [], [index_head; index_body]) in
 	let index_page = { nom = !page_name; document = index_html } in
 

@@ -366,3 +366,6 @@ let is_matrix string_matrix =
 			res := !res && (List.length (split ' ' (List.nth matrix_to_lines i)) == nb_columns)
 		done;
 	!res
+
+let is_square_matrix matrix =
+	nb_columns matrix == nb_lines matrix
