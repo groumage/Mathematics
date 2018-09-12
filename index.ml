@@ -12,12 +12,28 @@ let get_textarea id =
   Js.Opt.get (Dom_html.CoerceTo.textarea e)
     (fun () -> log ("failed to find '" ^ id ^ "' textarea"); assert false)
 
+let eqn_of_string s  = Parser.yacc_eqn  Lexer.lexer_main (Lexing.from_string s)
+let expr_of_string s = Parser.yacc_expr Lexer.lexer_main (Lexing.from_string s)
+
+let parse_eqn  = eqn_of_string
+let parse_expr = expr_of_string
+
 let set_matrix_caracteristics n p det =
   let div = get_elem "matrix_caracteristics" in
   if Util.is_float_int det then
-    div##innerHTML <- Js.string ("Dimensions: " ^ string_of_int n ^ "x" ^ string_of_int p ^ "<br/>Determinant = " ^ string_of_int (int_of_float det))
-  else 
-    div##innerHTML <- Js.string ("Dimensions: " ^ string_of_int n ^ "x" ^ string_of_int p ^ "<br/>Determinant = " ^ string_of_float det)
+    begin
+      let carac = ref "" in
+      carac := !carac ^ "Dimensions: " ^ string_of_int n ^ "x" ^ string_of_int p ^ "<br/>";
+      carac := !carac ^ "Determinant = " ^ string_of_int (int_of_float det);
+      div##innerHTML <- Js.string (!carac);
+    end
+  else
+    begin
+      let carac = ref "" in
+      carac := !carac ^ "Dimensions: " ^ string_of_int n ^ "x" ^ string_of_int p ^ "<br/>";
+      carac := !carac ^ "Determinant = " ^ string_of_float det;
+      div##innerHTML <- Js.string (!carac)
+    end
 
 let error_input_matrix () =
   let div = get_elem "matrix_caracteristics" in
@@ -38,14 +54,30 @@ let matrix () =
     in
   btn1##onclick <- Dom_html.handler (fun ev -> update_matrix_info (); Js._false)
 
+let set_simplify_expression expr =
+  let text1 = get_textarea "output_1" in
+  let expr_simplify = Function.string_of_expr (Function.simplify_expr (parse_expr (Js.to_string (Js.string "5+x")))) in
+  text1##value <- Js.string expr_simplify
+
+let error_input_simplify_expression () =
+  let text1 = get_textarea "output_1" in
+  text1##value <- Js.string "This is not a correct expression"
+
 let simplify_expression () =
   let text1 = get_textarea "input_2" in
-  let text2 = get_textarea "output_1" in
-  let btn2 = get_elem "btn_2" in
   text1##placeholder <- Js.string "Write your expression ...";
+  let text2 = get_textarea "output_1" in
   text2##placeholder <- Js.string "... and see the result !";
+  let btn2 = get_elem "btn_2" in
   btn2##textContent <- Js.some (Js.string "Simplify");
-  btn2##onclick <- Dom_html.handler (fun ev -> text2##value <- text1##value; Js._false)
+    let update_simplify_expression () =
+      let expression = Js.to_string text1##value in
+      if expression != "" then
+        set_simplify_expression expression
+      else
+        error_input_simplify_expression ()
+    in
+  btn2##onclick <- Dom_html.handler (fun ev -> update_simplify_expression (); Js._false)
 
 let onload _ = matrix (); simplify_expression (); Js._false
 
