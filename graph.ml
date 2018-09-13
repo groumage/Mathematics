@@ -177,3 +177,8 @@ let en_tableau_pixel fen line_ply =
 		t.(i) <- (conversion fen line_ply.(i))
 	done;
 t
+
+let make_image rgb_matrix =
+  Graphics.make_image (Array.map (Array.map
+          (fun (r, g, b) -> Graphics.rgb r g b))
+       rgb_matrix)

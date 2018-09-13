@@ -5,12 +5,18 @@ type attribut = Alg of string
 							| Id of string
 							| Rows of int
 							| Cols of int
+							| Width of int
+							| Height of int
 							
 type attributs = attribut list
+
+type border_type = Solid
+								 | Dotted
 
 type style = Color of string
 					 | FontSize of int
 					 | BackgroundColor of string
+					 | Border of int * border_type * string
 	
 type balise = Html
 						| Title
@@ -29,6 +35,7 @@ type balise = Html
 						| Script
 						| Textarea
 						| Button
+						| Canvas
 						| Empty
 
 type arbre =
@@ -49,12 +56,19 @@ type css = attributs M.t
 let m = M.empty
 let m = M.add (H 1) ([Color "blue"]) m
 let m = M.add (H 2) ([Color "navy"]) m
+let m = M.add (Canvas) ([Border (1, Solid, "#000000")]) m
+
+let borderstyle_to_string b =
+	match b with
+		Solid -> "solid"
+	| Dotted -> "dotted"
 
 let style_to_string2 s =
 	match s with
 	  Color s -> "color : " ^ s ^ ";"
 	| FontSize i -> "font-size : " ^ string_of_int i ^ "px;"
 	| BackgroundColor s -> "background-color : " ^ s ^ ";"
+	| Border (i, b, s) -> "border : " ^ string_of_int i ^ "px " ^ borderstyle_to_string b ^ " " ^ s ^ ";"
 
 let rec tree_to_string tree name =
 	match tree with
@@ -65,18 +79,19 @@ let rec tree_to_string tree name =
 												 | Head -> "<head " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</head>\n"
 												 | Body -> "<body " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</body>\n"
 												 | Link -> "<link " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</link>\n"
-												 | H i -> "<h" ^ string_of_int i ^ " " ^ attributes_to_string a ^ "style = \"" ^ style_to_string (H i) ^ "\">" ^ tree_to_list t name ^ "</h" ^ string_of_int i ^ ">\n"
+												 | H i -> "<h" ^ string_of_int i ^ " " ^ attributes_to_string a ^ "style = \"" ^ style_to_string (H i) ^ "\">\n" ^ tree_to_list t name ^ "</h" ^ string_of_int i ^ ">\n"
 												 | B -> "<b " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</b>\n"
 												 | I -> "<i " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</i>\n"
 												 | U -> "<u " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</u>\n"
 												 | Del -> "<del " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</del>\n"
 												 | Ul -> "<ul " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</ul>\n"
 												 | P -> "<p " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</p>\n"
-												 | Li -> "<li " ^ attributes_to_string a ^ "style = \"" ^ style_to_string Li ^ "\">" ^ tree_to_list t name ^ "</li>\n"
+												 | Li -> "<li " ^ attributes_to_string a ^ "style = \"" ^ style_to_string Li ^ "\">\n" ^ tree_to_list t name ^ "</li>\n"
 												 | Script -> "<script " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</script>\n"
 												 | Div -> "<div " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</div>\n"
 												 | Textarea -> "<textarea " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</textarea>\n"
 												 | Button -> "<button " ^ attributes_to_string a ^ ">\n" ^ tree_to_list t name ^ "</button>\n"
+												 | Canvas -> "<canvas " ^ attributes_to_string a ^ "style = \"" ^ style_to_string Canvas ^ "\">\n" ^ tree_to_list t name ^ "</canvas>\n"
 												 | Empty -> attributes_to_string a ^ tree_to_list t name
 												)
 and tree_to_list tree_list name =
@@ -94,6 +109,8 @@ and attributes_to_string lst =
 							| Id s -> "id = \"" ^ s ^ "\" " ^ attributes_to_string t
 							| Rows i -> "rows = \"" ^ string_of_int i ^ "\" " ^ attributes_to_string t
 							| Cols i -> "cols = \"" ^ string_of_int i ^ "\" " ^ attributes_to_string t
+							| Height i -> "height = \"" ^ string_of_int i ^ "\" " ^ attributes_to_string t
+							| Width i -> "width = \"" ^ string_of_int i ^ "\" " ^ attributes_to_string t
 and style_to_string balise =
 	let a = M.find balise m in
 	let rec decompose_lst lst =
@@ -119,7 +136,12 @@ let init_site =
 	let index_btn2 = Balise (Button, [Id "btn_2"], []) in
 	let index_text3 = Balise (Textarea, [Id "output_1"; Rows 2; Cols 40], []) in
 	let index_info_expr_simp = Balise (Div, [Id "simplify_expr"], []) in
-	let index_body = Balise (Body, [], [index_h1; index_p1; index_text1; index_btn1; index_matrix_caracteristics; index_p2; index_text2; index_btn2; index_text3; index_info_expr_simp]) in
+	let index_p3 = Balise (H 2, [], [Text "Draw function"]) in
+	let index_text4 = Balise (Textarea, [Id "input_3"; Rows 2; Cols 40], []) in
+	let index_btn3 = Balise (Button, [Id "btn_3"], []) in
+	let index_canvas = Balise (Canvas, [Id "graphic"; Width 320; Height 240], []) in
+	let index_div_canvas = Balise (Div, [Id "canvas"], [index_canvas]) in
+	let index_body = Balise (Body, [], [index_h1; index_p1; index_text1; index_btn1; index_matrix_caracteristics; index_p2; index_text2; index_btn2; index_text3; index_info_expr_simp; index_p3; index_text4; index_btn3; index_div_canvas]) in
 	let index_html = Balise (Html, [], [index_head; index_body]) in
 	let index_page = { nom = !page_name; document = index_html } in
 

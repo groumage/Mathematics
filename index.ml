@@ -12,6 +12,11 @@ let get_textarea id =
   Js.Opt.get (Dom_html.CoerceTo.textarea e)
     (fun () -> log ("failed to find '" ^ id ^ "' textarea"); assert false)
 
+let get_canvas id =
+  let e = get_elem id in
+  Js.Opt.get (Dom_html.CoerceTo.canvas e)
+    (fun () -> log ("failed to find '" ^ id ^ "' canvas"); assert false)
+
 let eqn_of_string s  = Parser.yacc_eqn  Lexer.lexer_main (Lexing.from_string s)
 let expr_of_string s = Parser.yacc_expr Lexer.lexer_main (Lexing.from_string s)
 
@@ -55,7 +60,7 @@ let erase_error_input_matrix () =
 let matrix () =
   let text1 = get_textarea "input_1" in
   text1##placeholder <- Js.string "Write your matrix !";
-  text1##onchange <- erase_error_input_matrix ();
+  text1##oninput <- Dom_html.handler (fun _ -> erase_error_input_matrix (); Js._false);
   let btn1 = get_elem "btn_1" in
   btn1##textContent <- Js.some (Js.string "Calculate");
     let update_matrix_info () =
@@ -94,6 +99,7 @@ let set_simplify_expression expr =
 let simplify_expression () =
   let text1 = get_textarea "input_2" in
   text1##placeholder <- Js.string "Write your expression ...";
+  text1##oninput <- Dom_html.handler (fun _ -> erase_error_input_simplify_expression (); Js._false);
   let text2 = get_textarea "output_1" in
   text2##placeholder <- Js.string "... and see the result !";
   let btn2 = get_elem "btn_2" in
@@ -107,6 +113,19 @@ let simplify_expression () =
     in
   btn2##onclick <- Dom_html.handler (fun ev -> update_simplify_expression (); Js._false)
 
-let onload _ = matrix (); simplify_expression (); Js._false
+let draw_function () =
+  let btn3 = get_elem "btn_3" in
+  btn3##textContent <- Js.some (Js.string "Draw");
+  let input_3 = get_textarea "input_3" in
+  input_3##placeholder <- Js.string "Write your function ! ";
+  let canvas = get_canvas "graphic" in
+  let c = canvas##getContext (Dom_html._2d_) in
+  c##fillStyle <- Js.string "rgb(200,200,200)";
+  c##fillRect (0., 0., 320., 240.);
+  c##fillStyle <- Js.string "rgb(255,0,0)";
+  c##fillRect (40., 40., 15., 15.)
+
+
+let onload _ = matrix (); simplify_expression (); draw_function (); Js._false
 
 let _ = Dom_html.window##onload <- Dom_html.handler onload
