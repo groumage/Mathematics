@@ -16,6 +16,7 @@ parser.ml
 parser.mli
 save.ml
 test.js
+move_fic.sh
 
 # ocamlbuild working directory
 _build/

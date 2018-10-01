@@ -1,5 +1,4 @@
 SOURCES = util.ml matrix.ml function.ml parser.mly lexer.mll graph.ml html.ml main.ml
-SOURCESHTML = index.ml
 
 EXEC = project.exe
 
@@ -13,26 +12,32 @@ JCAML = js_of_ocaml
 JCAMLP4 = js_of_ocaml-camlp4
 CAMLP4 = camlp4o
 
-LIBS = $(WITHGRAPHICS) $(WITHSTR) $(WITHUNIX)
-
-WITHGRAPHICS = graphics.cma
-WITHSTR = str.cma
-WITHUNIX = unix.cma
-
 CUSTOM = -custom
 
 all: depend $(EXEC)
 
 SOURCES1 = $(SOURCES:.mly=.ml)
 SOURCES2 = $(SOURCES1:.mll=.ml)
-SOURCES1HTML = $(SOURCESHTML:.ml=.bytes)
 OBJS = $(SOURCES2:.ml=.cmo)
+
+SOURCESHTML = $(addsuffix .ml, $(HTML))
+SOURCESBYTES = $(addsuffix .bytes, $(HTML))
+
+WITHGRAPHICS = graphics.cma
+WITHUNIX = unix.cma
+WITHSTR = str.cma
+
+LIBS = $(WITHGRAPHICS) $(WITHUNIX) $(WITHSTR)
 
 $(EXEC): $(OBJS)
 	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg $(CUSTOM) $(LIBS) -o $(EXEC) $(OBJS)
 	@echo "\033[0;34m[Creation]\033[0m" html interface
-	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o $(SOURCES1HTML) $(OBJS) $(SOURCESHTML)
-	@$(JCAML) $(SOURCES1HTML)
+	@echo "\033[0;34m[index_web]\033[0m" html interface
+	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o index_web.bytes $(OBJS) index_web.ml
+	@$(JCAML) index_web.bytes
+	@echo "\033[0;34m[matrix_web]\033[0m" html interface
+	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o matrix_web.bytes $(OBJS) matrix_web.ml
+	@$(JCAML) matrix_web.bytes
 	@echo "\033[0;32m[Project complete]\033[0m" $(EXEC)
 
 .SUFFIXES:
