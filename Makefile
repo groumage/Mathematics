@@ -38,6 +38,12 @@ $(EXEC): $(OBJS)
 	@echo "\033[0;34m[matrix_web]\033[0m" html interface
 	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o matrix_web.bytes $(OBJS) matrix_web.ml
 	@$(JCAML) matrix_web.bytes
+	@echo "\033[0;34m[simp_expr_web]\033[0m" html interface
+	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o simp_expr_web.bytes $(OBJS) simp_expr_web.ml
+	@$(JCAML) simp_expr_web.bytes
+	@echo "\033[0;34m[draw_function_web]\033[0m" html interface
+	@$(CAMLFIND) $(CAMLC) -package $(JCAML) -package $(JCAMLP4) -linkpkg -syntax $(CAMLP4) $(LIBS) -o draw_function_web.bytes $(OBJS) draw_function_web.ml
+	@$(JCAML) draw_function_web.bytes
 	@echo "\033[0;32m[Project complete]\033[0m" $(EXEC)
 
 .SUFFIXES:
