@@ -24,10 +24,17 @@ let draw_function () =
   input_fct##placeholder <- Js.string "Write your function ! ";
   let canvas = get_canvas "canvas" in
   let canvas2d = canvas##getContext (Dom_html._2d_) in
-  canvas2d##fillStyle <- Js.string "rgb(200,200,200)";
-  canvas2d##fillRect (0., 0., 320., 240.);
-  canvas2d##fillStyle <- Js.string "rgb(255,0,0)";
-  canvas2d##fillRect (40., 40., 15., 15.)
+  let draw () =
+    let zip_tab = Graph.get_zip_tab () in
+    let (x,y) = zip_tab.(0) in
+    canvas2d##moveTo (float_of_int x, float_of_int y);
+    for i = 0 to ((Array.length zip_tab) - 1) do
+      let (x, y) = zip_tab.(i) in
+      canvas2d##lineTo (float_of_int x, float_of_int y)
+    done;
+    canvas2d##stroke ()
+  in
+  btn_draw##onclick <- Dom_html.handler (fun ev -> draw (); Js._false)
 
 let onload _ = draw_function (); Js._false
 

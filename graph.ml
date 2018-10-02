@@ -5,9 +5,8 @@ type fenetre = {mutable abs: intervalle; mutable ord: intervalle}
 
 let nombre_points = ref 200
 let length_x = 900
-let length_y = 700
-let length_x_matrix = 400
-let length_y_matrix = 400
+let length_y = 550
+
 let decalage_x = 100
 let decalage_y = 100
 let longueur_repere_visu = 3
@@ -18,12 +17,15 @@ let max_ord = ref 10.
 let min_ord = ref (-10.)
 
 let decoupe_intervalle i n =
-	let tab = Array.make (n+1) 0. in
+	let tab = Array.make (n + 1) 0. in
 	let pas = (i.b -. i.a) /. float_of_int n in
 	for j = 0 to n do
 		tab.(j) <- i.a +. float_of_int j *. pas;
 	done;
 tab
+
+let get_zip_tab () =
+	[|(5,5); (20,20); (50,50)|]
 
 let longueur i =
 	i.b -. i.a
