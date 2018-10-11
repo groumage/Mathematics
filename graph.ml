@@ -3,7 +3,7 @@ type point = {x: float; y: float}
 type ligne_polygonale = point array
 type fenetre = {mutable abs: intervalle; mutable ord: intervalle}
 
-let nombre_points = ref 200
+let nombre_points = ref 250
 let length_x = 900
 let length_y = 550
 
@@ -16,6 +16,9 @@ let min_abs = ref (-10.)
 let max_ord = ref 10.
 let min_ord = ref (-10.)
 
+let longueur i =
+	i.b -. i.a
+
 let decoupe_intervalle i n =
 	let tab = Array.make (n + 1) 0. in
 	let pas = (i.b -. i.a) /. float_of_int n in
@@ -24,13 +27,59 @@ let decoupe_intervalle i n =
 	done;
 tab
 
-let get_zip_tab () =
-	[|(5,5); (20,20); (50,50)|]
+let map e tab =
+	let map_tab = Array.make (Array.length tab) 0. in
+	for i = 0 to (Array.length tab) - 1 do
+		map_tab.(i) <- Function.eval_expr e tab.(i);
+		print_string ("(" ^ string_of_float tab.(i) ^ "," ^ string_of_float (Function.eval_expr e tab.(i)) ^ ")\n")
+	done;
+map_tab
 
-let longueur i =
-	i.b -. i.a
+let proportion i x =
+	(x -. i.a) /. longueur i
 
-let draw_frame_graph dim_x dim_y =
+let aux p n =
+	let res = p *. float_of_int n in
+	let part_ent = int_of_float res in
+	let decimale = Util.abs_float (res -. float_of_int part_ent) in
+	if decimale < 0.5 then part_ent else part_ent + 1
+		
+let aux2 i n x =
+	aux (proportion i x) n
+	
+let conversion fen p =
+	((aux2 fen.abs length_x p.x), (aux2 fen.ord length_y p.y))
+	
+let en_tableau_pixel fen line_ply =
+	let t = Array.make (Array.length line_ply) (0,0) in
+	for i = 0 to ((Array.length line_ply) - 1) do
+		t.(i) <- (conversion fen line_ply.(i))
+	done;
+t
+
+let zip tab_x tab_y =
+	if Array.length tab_x != Array.length tab_y
+	then
+		failwith "zip: wrong tab dimensions"
+	else
+		let zip_tab = Array.make (Array.length tab_x) ({x = 0.; y = 0.}) in
+		for i = 0 to (Array.length zip_tab) - 1 do
+			zip_tab.(i) <- {x = tab_x.(i); y = tab_y.(i)}
+		done;
+zip_tab
+
+let get_zip_tab fct =
+	let intervalle_x = { a = !min_abs; b = !max_abs } in
+	let intervalle_y = { a = !min_ord; b = !max_ord } in
+	let fen = { abs = intervalle_x; ord = intervalle_y } in
+	let tab_x = decoupe_intervalle intervalle_x !nombre_points in
+	(*let tab_y = decoupe_intervalle intervalle_y !nombre_points in*)
+	let map_tab_y = ref (map fct tab_x) in
+	let zip_tab = ref (zip tab_x !map_tab_y) in
+	let tab = en_tableau_pixel fen !zip_tab in
+	tab
+
+(*let draw_frame_graph dim_x dim_y =
 	Graphics.set_color Graphics.black;
 	Graphics.draw_rect 0 (decalage_y) (dim_x - decalage_x) (dim_y - decalage_y - 1)
 
@@ -120,24 +169,6 @@ let create_matrix m dim_x dim_y =
 	mem_pos_y := !mem_pos_y - y - 15;
 	Graphics.moveto 5 !mem_pos_y;
 	Graphics.draw_string ("Trace : " ^ string_of_float trace)
-	
-let map e tab =
-	let map_tab = Array.make (Array.length tab) 0. in
-	for i = 0 to (Array.length tab) - 1 do
-		map_tab.(i) <- Function.eval_expr e tab.(i)
-	done;
-tab
-
-let zip tab_x tab_y =
-	if Array.length tab_x != Array.length tab_y
-	then
-		failwith "zip: wrong tab dimensions"
-	else
-		let zip_tab = Array.make (Array.length tab_x) ({x = 0.; y = 0.}) in
-		for i = 0 to (Array.length zip_tab) - 1 do
-			zip_tab.(i) <- {x = tab_x.(i); y = tab_y.(i)}
-		done;
-zip_tab
 
 let trace t c =
 	Graphics.set_color c;
@@ -149,38 +180,11 @@ let trace t c =
 	done;
 	Graphics.set_color Graphics.white;
 	Graphics.fill_rect 0 0 (Graphics.size_x()) (decalage_y - 1);
-	Graphics.fill_rect (Graphics.size_x() - decalage_x) 0 decalage_x (Graphics.size_y())
+	Graphics.fill_rect (Graphics.size_x() - decalage_x) 0 decalage_x (Graphics.size_y())*)
 
-let print_fct f =
+(*let print_fct f =
 	Graphics.set_color Graphics.black;
 	let string_f = Function.print_expr f in
 	let (x_text, y_text) = Graphics.text_size string_f in
 	Graphics.moveto 5 (decalage_y - y_text - 5);
-	Graphics.draw_string ("f(x) = " ^ string_f)
-
-let proportion i x =
-	(x -. i.a) /. longueur i
-
-let aux p n =
-	let res = p *. float_of_int n in
-	let part_ent = int_of_float res in
-	let decimale = Util.abs_float (res -. float_of_int part_ent) in
-	if decimale < 0.5 then part_ent else part_ent + 1
-		
-let aux2 i n x =
-	aux (proportion i x) n
-	
-let conversion fen p =
-	((aux2 fen.abs (Graphics.size_x() - decalage_x) p.x), (aux2 fen.ord (Graphics.size_y() - decalage_y) p.y) + decalage_y)	
-	
-let en_tableau_pixel fen line_ply =
-	let t = Array.make (Array.length line_ply) (0,0) in
-	for i = 0 to ((Array.length line_ply) - 1) do
-		t.(i) <- (conversion fen line_ply.(i))
-	done;
-t
-
-let make_image rgb_matrix =
-  Graphics.make_image (Array.map (Array.map
-          (fun (r, g, b) -> Graphics.rgb r g b))
-       rgb_matrix)
+	Graphics.draw_string ("f(x) = " ^ string_f)*)
